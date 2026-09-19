@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ROC Rocks Budgeting — Create account</title>
+<link rel="stylesheet" href="style.css" />
+<script src="auth.js" defer></script>
+</head>
+<body>
+
+<div class="confetti" aria-hidden="true">
+  <span></span><span></span><span></span><span></span><span></span>
+</div>
+
+<div class="auth-shell">
+
+  <header class="auth-header">
+    <a href="home.html" class="brand">
+      <span class="brand-coin">$</span>
+      <span class="brand-mark">ROC Rocks Budgeting</span>
+    </a>
+  </header>
+
+  <main class="auth-main">
+    <div class="auth-card">
+      <p class="auth-eyebrow">Let's get started</p>
+      <h1 class="auth-title">Create your account</h1>
+      <p class="auth-subtitle">Takes about a minute — no card required.</p>
+
+      <form class="auth-form" id="signup-form" action="home.html">
+        <div class="field">
+          <label for="name">Full name</label>
+          <input type="text" id="name" name="name" placeholder="Jamie Morgan" required autocomplete="name" />
+        </div>
+
+        <div class="field">
+          <label for="signup-email">Email</label>
+          <input type="email" id="signup-email" name="email" placeholder="you@example.com" required autocomplete="email" />
+        </div>
+
+        <div class="field">
+          <label for="signup-password">Password</label>
+          <input type="password" id="signup-password" name="password" placeholder="Create a password" required autocomplete="new-password" minlength="8" />
+          <p class="password-hint">At least 8 characters.</p>
+        </div>
+
+        <label class="checkbox-row">
+          <input type="checkbox" name="terms" required />
+          I agree to the Terms of Service and Privacy Policy
+        </label>
+
+        <button type="submit" class="btn-primary">Create account</button>
+      </form>
+
+      <div class="auth-divider">or</div>
+
+      <button type="button" class="btn-social">Continue with Google</button>
+
+      <p class="auth-switch">Already have an account? <a href="signin.html">Sign in</a></p>
+    </div>
+  </main>
+
+</div>
+
+<script>
+  document.getElementById("signup-form").addEventListener("submit", () => {
+    setSignedIn(true);
+    // form's action="home.html" handles the navigation
+  });
+</script>
+
+</body>
+</html>
