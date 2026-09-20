@@ -72,63 +72,86 @@
     <span>All figures in USD</span>
   </footer>
 
-  <script src="categories-data.js"></script>
-  <script>
-    // categories array + categoryRowHtml() come from categories-data.js,
-    // shared with home.html — add or edit a category there and both the
-    // pie chart and the bars below update automatically.
-    //
-    // The hero pie/legend shows the top 5 categories by budgeted amount,
-    // individually, plus a 6th "Other" gray slice that sums up whatever's
-    // left over — so it always has exactly 6 slices no matter how many
-    // categories exist. The full bar list below still shows every real
-    // category on its own, "Other" is only a pie/legend concept.
-    const sorted = [...categories].sort((a, b) => b.budget - a.budget);
-    const topFive = sorted.slice(0, 5);
-    const rest = sorted.slice(5);
-    const otherTotal = rest.reduce((sum, c) => sum + c.budget, 0);
- 
-    const pieSlices = [...topFive];
-    if (otherTotal > 0) {
-      pieSlices.push({ name: "Other", color: "gray", budget: otherTotal });
-    }
- 
-    const pieTotal = pieSlices.reduce((sum, c) => sum + c.budget, 0);
- 
-    // Build the conic-gradient stops and legend from the same numbers.
-    let cumulative = 0;
-    const gradientStops = pieSlices.map((c) => {
-      const start = cumulative;
-      cumulative += (c.budget / pieTotal) * 100;
-      return `var(--${c.color}) ${start.toFixed(1)}% ${cumulative.toFixed(1)}%`;
-    });
- 
-    const pieChart = document.getElementById("pie-chart");
-    pieChart.style.background = `conic-gradient(${gradientStops.join(", ")})`;
-    pieChart.setAttribute(
-      "aria-label",
-      "Pie chart: " + pieSlices.map((c) => `${c.name} ${Math.round((c.budget / pieTotal) * 100)}%`).join(", ")
-    );
- 
-    const legend = document.getElementById("pie-legend");
-    pieSlices.forEach((c) => {
-      const pct = Math.round((c.budget / pieTotal) * 100);
-      legend.insertAdjacentHTML("beforeend", `
-        <div class="pie-legend-item">
-          <span class="pie-swatch" style="background: var(--${c.color})"></span>
-          ${c.name}
-          <span class="pie-legend-amount">$${c.budget.toLocaleString()} · ${pct}%</span>
-        </div>
-      `);
-    });
- 
+  <script src="api.js"></script>
+<script src="categories-data.js"></script>
+<script>
+  const DEMO_USER_ID = 1;
+  const now = new Date();
+  const YEAR = now.getFullYear();
+  const MONTH = now.getMonth() + 1;
+
+  async function loadBudgetPage() {
     const rows = document.getElementById("category-rows");
-    // Over-budget categories float to the top — see categoriesSortedByOverBudget()
-    // in categories-data.js.
-    categoriesSortedByOverBudget().forEach((c) => {
-      rows.insertAdjacentHTML("beforeend", categoryRowHtml(c));
-    });
-  </script>
+    try {
+      const report = await apiGet(`/reports/budget-vs-actual/user/${DEMO_USER_ID}/${YEAR}/${MONTH}`);
+
+      const merged = report.categories.map(rc => {
+        const meta = categories.find(c => c.name === rc.categoryName);
+        return {
+          name: rc.categoryName,
+          icon: meta ? meta.icon : "💳",
+          color: meta ? meta.color : "sky",
+          cap: meta ? meta.cap : "",
+          spent: rc.actual,
+          budget: rc.budgeted,
+        };
+      });
+
+      // Pie chart: top 5 by budgeted amount, plus "Other" for the rest
+      const sorted = [...merged].sort((a, b) => b.budget - a.budget);
+      const topFive = sorted.slice(0, 5);
+      const rest = sorted.slice(5);
+      const otherTotal = rest.reduce((sum, c) => sum + c.budget, 0);
+
+      const pieSlices = [...topFive];
+      if (otherTotal > 0) {
+        pieSlices.push({ name: "Other", color: "gray", budget: otherTotal });
+      }
+
+      const pieTotal = pieSlices.reduce((sum, c) => sum + c.budget, 0);
+
+      let cumulative = 0;
+      const gradientStops = pieSlices.map((c) => {
+        const start = cumulative;
+        cumulative += (c.budget / pieTotal) * 100;
+        return `var(--${c.color}) ${start.toFixed(1)}% ${cumulative.toFixed(1)}%`;
+      });
+
+      const pieChart = document.getElementById("pie-chart");
+      pieChart.style.background = `conic-gradient(${gradientStops.join(", ")})`;
+      pieChart.setAttribute(
+        "aria-label",
+        "Pie chart: " + pieSlices.map((c) => `${c.name} ${Math.round((c.budget / pieTotal) * 100)}%`).join(", ")
+      );
+
+      const legend = document.getElementById("pie-legend");
+      pieSlices.forEach((c) => {
+        const pct = Math.round((c.budget / pieTotal) * 100);
+        legend.insertAdjacentHTML("beforeend", `
+          <div class="pie-legend-item">
+            <span class="pie-swatch" style="background: var(--${c.color})"></span>
+            ${c.name}
+            <span class="pie-legend-amount">$${c.budget.toLocaleString()} · ${pct}%</span>
+          </div>
+        `);
+      });
+
+      // Category bars: over-budget ones float to the top
+      const sortedByOver = [...merged].sort((a, b) => {
+        const aOver = a.spent > a.budget ? 1 : 0;
+        const bOver = b.spent > b.budget ? 1 : 0;
+        return bOver - aOver;
+      });
+      rows.innerHTML = sortedByOver.map(categoryRowHtml).join("");
+
+    } catch (err) {
+      console.error("Failed to load budget:", err);
+      rows.innerHTML = `<p>No budget found for this month yet.</p>`;
+    }
+  }
+
+  loadBudgetPage();
+</script>
 
 </div>
 

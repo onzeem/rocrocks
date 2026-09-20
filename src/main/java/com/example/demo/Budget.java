@@ -29,6 +29,7 @@ public class Budget {
 
     @Column(name = "budget_month")
     private int month;
+
     @Column(name = "budget_year")
     private int year;
 

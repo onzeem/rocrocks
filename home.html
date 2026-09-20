@@ -119,45 +119,86 @@
     <span>All figures in USD</span>
   </footer>
 
-  <script src="transactions-data.js"></script>
-  <script>
-    // Reads the same array (and localStorage key) transactions.html
-    // reads/writes — so anything added there shows up here too, and the
-    // "recent" preview never drifts out of sync with the full list.
-    function loadRecentTransactions() {
-      try {
-        const stored = localStorage.getItem("rocTransactions");
-        return stored ? JSON.parse(stored) : [...defaultTransactions];
-      } catch {
-        return [...defaultTransactions];
-      }
-    }
+  <script src="api.js"></script>
+<script src="categories-data.js"></script>
+<script src="transactions-data.js"></script>
+<script src="goals-data.js"></script>
 
-    const recentTxns = [...loadRecentTransactions()]
-      .sort((a, b) => (a.date < b.date ? 1 : -1))
-      .slice(0, 5);
+<script>
+  const DEMO_USER_ID = 1;
+  const now = new Date();
+  const YEAR = now.getFullYear();
+  const MONTH = now.getMonth() + 1;
 
-    document.getElementById("recent-txn-list").innerHTML = recentTxns.map(txnRowHtml).join("");
-  </script>
-
-  <script src="categories-data.js"></script>
-  <script>
-    // categories array + categoryRowHtml() come from categories-data.js,
-    // shared with budget.html — add or edit a category there and both
-    // pages update automatically.
+  async function loadCategoryRows() {
     const categoryRows = document.getElementById("category-rows");
-    // Over-budget categories float to the top — see categoriesSortedByOverBudget()
-    // in categories-data.js.
-    categoriesSortedByOverBudget().forEach((c) => {
-      categoryRows.insertAdjacentHTML("beforeend", categoryRowHtml(c));
-    });
-  </script>
+    try {
+      const report = await apiGet(`/reports/budget-vs-actual/user/${DEMO_USER_ID}/${YEAR}/${MONTH}`);
+      const merged = report.categories.map(rc => {
+        const meta = categories.find(c => c.name === rc.categoryName);
+        return {
+          name: rc.categoryName,
+          icon: meta ? meta.icon : "💳",
+          color: meta ? meta.color : "sky",
+          cap: meta ? meta.cap : "",
+          spent: rc.actual,
+          budget: rc.budgeted,
+        };
+      });
+      const sorted = [...merged].sort((a, b) => {
+        const aOver = a.spent > a.budget ? 1 : 0;
+        const bOver = b.spent > b.budget ? 1 : 0;
+        return bOver - aOver;
+      });
+      categoryRows.innerHTML = sorted.map(categoryRowHtml).join("");
+    } catch (err) {
+      console.error("Failed to load categories:", err);
+      categoryRows.innerHTML = `<p>No budget found for this month yet.</p>`;
+    }
+  }
 
-  <script src="goals-data.js"></script>
-  <script>
-    // Goals come from loadGoals() in goals-data.js — the seeded defaults on
-    // a first-ever visit, or whatever's saved (shared with savings.html and
-    // add-goal.html) after that.
+  async function loadRecentTransactions() {
+    try {
+      const txns = await apiGet(`/transactions/user/${DEMO_USER_ID}`);
+      const mapped = txns.map(t => ({
+        merchant: t.description || t.categoryName,
+        category: t.categoryName,
+        type: "out",
+        amount: t.amount,
+        date: t.date,
+      }));
+      const recent = mapped
+        .sort((a, b) => (a.date < b.date ? 1 : -1))
+        .slice(0, 5);
+      document.getElementById("recent-txn-list").innerHTML = recent.map(txnRowHtml).join("");
+    } catch (err) {
+      console.error("Failed to load transactions:", err);
+    }
+  }
+
+  async function loadHeroStats() {
+    try {
+      const report = await apiGet(`/reports/budget-vs-actual/user/${DEMO_USER_ID}/${YEAR}/${MONTH}`);
+      const remaining = report.totalDifference;
+      const isBelow = remaining >= 0;
+
+      document.querySelector(".hero .figure").innerHTML =
+        `$${Math.abs(remaining).toFixed(2).replace(".", "<sup>.")}</sup>` +
+        `<span class="note">${isBelow ? "below budget!" : "over budget"}</span>`;
+
+      const saved = Math.max(report.totalIncome - report.totalActual, 0);
+      document.querySelectorAll(".stat")[0].querySelector(".figure").textContent =
+        `$${report.totalIncome.toLocaleString()}`;
+      document.querySelectorAll(".stat")[1].querySelector(".figure").textContent =
+        `$${report.totalActual.toLocaleString()}`;
+      document.querySelectorAll(".stat")[2].querySelector(".figure").textContent =
+        `$${saved.toLocaleString()}`;
+    } catch (err) {
+      console.error("Failed to load hero stats:", err);
+    }
+  }
+
+  function loadGoalsSection() {
     const list = document.getElementById("goal-card-list");
     const goals = loadGoals();
     const r = 40;
@@ -168,7 +209,6 @@
     goals.forEach((goal) => {
       const pct = Math.round((goal.saved / goal.target) * 100);
       const offset = (circumference * (1 - pct / 100)).toFixed(1);
-      const noteHtml = goal.note ? `<p class="goal-card-desc">${goal.note}</p>` : "";
 
       list.insertAdjacentHTML("beforeend", `
         <article class="goal-card" style="background: var(--${goal.color}-tint);">
@@ -189,13 +229,17 @@
               </div>
               <p class="goal-card-amount tabular">$${goal.saved.toLocaleString()}<span>of $${goal.target.toLocaleString()}</span></p>
             </div>
-
           </div>
         </article>
       `);
     });
-  </script>
+  }
 
+  loadCategoryRows();
+  loadRecentTransactions();
+  loadHeroStats();
+  loadGoalsSection();
+</script>
 </div>
 </body>
 </html>

@@ -28,11 +28,18 @@ public class BudgetController {
         this.categoryRepository = categoryRepository;
     }
 
-    // CREATE a new budget
     @PostMapping
     public ResponseEntity<BudgetSummaryResponse> createBudget(@RequestBody CreateBudgetRequest request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + request.getUserId()));
+
+        boolean alreadyExists = budgetRepository
+                .findByUserIdAndMonthAndYear(request.getUserId(), request.getMonth(), request.getYear())
+                .isPresent();
+        if (alreadyExists) {
+            throw new RuntimeException("Budget already exists for user " + request.getUserId()
+                    + " in " + request.getMonth() + "/" + request.getYear());
+        }
 
         Budget budget = new Budget(user, request.getMonth(), request.getYear(), request.getTotalIncome());
 
@@ -48,7 +55,6 @@ public class BudgetController {
         return ResponseEntity.status(HttpStatus.CREATED).body(toSummary(saved));
     }
 
-    // READ a single budget summary by ID
     @GetMapping("/{id}/summary")
     public ResponseEntity<BudgetSummaryResponse> getSummary(@PathVariable Long id) {
         Budget budget = budgetRepository.findById(id)
@@ -57,7 +63,6 @@ public class BudgetController {
         return ResponseEntity.ok(toSummary(budget));
     }
 
-    // READ all budgets for a specific user
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<BudgetSummaryResponse>> getBudgetsByUser(@PathVariable Long userId) {
         List<Budget> budgets = budgetRepository.findByUserId(userId);
@@ -68,7 +73,6 @@ public class BudgetController {
         return ResponseEntity.ok(summaries);
     }
 
-    // DELETE a budget by ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBudget(@PathVariable Long id) {
         if (!budgetRepository.existsById(id)) {
@@ -78,7 +82,6 @@ public class BudgetController {
         return ResponseEntity.noContent().build();
     }
 
-    // Helper method to convert Budget entity to DTO
     private BudgetSummaryResponse toSummary(Budget budget) {
         List<CategorySummaryItem> items = budget.getBudgetCategories().stream()
                 .map(bc -> new CategorySummaryItem(bc.getCategory().getName(), bc.getAllocatedAmount()))

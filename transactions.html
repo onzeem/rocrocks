@@ -75,39 +75,53 @@
     <span>All figures in USD</span>
   </footer>
 
-  <script src="transactions-data.js"></script>
-  <script>
-    const txnList = document.getElementById("txn-list");
-    const moneyInEl = document.getElementById("stat-money-in");
-    const moneyOutEl = document.getElementById("stat-money-out");
-    const netEl = document.getElementById("stat-net");
+  <script src="api.js"></script>
+<script src="transactions-data.js"></script>
+<script>
+  const DEMO_USER_ID = 1;
+  const now = new Date();
+  const YEAR = now.getFullYear();
+  const MONTH = now.getMonth() + 1;
 
-    // First visit (nothing in localStorage yet): start from the seeded
-    // defaults in transactions-data.js. Every visit after that: whatever's
-    // in localStorage — kept up to date by add-transaction.html — is the
-    // real, current array.
-    const STORAGE_KEY = "rocTransactions";
+  const txnList = document.getElementById("txn-list");
+  const moneyInEl = document.getElementById("stat-money-in");
+  const moneyOutEl = document.getElementById("stat-money-out");
+  const netEl = document.getElementById("stat-net");
 
-    function loadTransactions() {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        return stored ? JSON.parse(stored) : [...defaultTransactions];
-      } catch {
-        return [...defaultTransactions];
-      }
+  async function loadTransactionsPage() {
+    try {
+      const [txns, report] = await Promise.all([
+        apiGet(`/transactions/user/${DEMO_USER_ID}`),
+        apiGet(`/reports/budget-vs-actual/user/${DEMO_USER_ID}/${YEAR}/${MONTH}`),
+      ]);
+
+      const mapped = txns.map(t => ({
+        merchant: t.description || t.categoryName,
+        category: t.categoryName,
+        type: "out",
+        amount: t.amount,
+        date: t.date,
+      }));
+
+      const sorted = [...mapped].sort((a, b) => (a.date < b.date ? 1 : -1));
+      txnList.innerHTML = sorted.map(txnRowHtml).join("");
+
+      const moneyIn = report.totalIncome;
+      const moneyOut = report.totalActual;
+      const net = moneyIn - moneyOut;
+
+      moneyInEl.textContent = formatMoney(moneyIn);
+      moneyOutEl.textContent = formatMoney(moneyOut);
+      netEl.textContent = `${net >= 0 ? "+" : "−"}${formatMoney(Math.abs(net))}`;
+
+    } catch (err) {
+      console.error("Failed to load transactions:", err);
+      txnList.innerHTML = `<li>No transactions found.</li>`;
     }
+  }
 
-    const transactions = loadTransactions();
-    const sorted = [...transactions].sort((a, b) => (a.date < b.date ? 1 : -1));
-
-    txnList.innerHTML = sorted.map(txnRowHtml).join("");
-
-    const { moneyIn, moneyOut } = computeTotals(transactions);
-    moneyInEl.textContent = formatMoney(moneyIn);
-    moneyOutEl.textContent = formatMoney(moneyOut);
-    const net = moneyIn - moneyOut;
-    netEl.textContent = `${net >= 0 ? "+" : "−"}${formatMoney(Math.abs(net))}`;
-  </script>
+  loadTransactionsPage();
+</script>
 
 </div>
 

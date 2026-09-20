@@ -1,7 +1,10 @@
-INSERT INTO users (id, name, email) VALUES (1, 'John Doe', 'john.doe@example.com');
-INSERT INTO users (id, name, email) VALUES (2, 'Jane Smith', 'jane.smith@example.com');
+INSERT INTO users (id, name, email) VALUES (1, 'Test User', 'test@example.com');
 
 INSERT INTO categories (id, name, description) VALUES
-    (1, 'Rent', 'Housing costs'),
-    (2, 'Groceries', 'Food and household supplies'),
-    (3, 'Entertainment', 'Movies, games, and subscriptions');
+  (1, 'Housing', 'Rent, utilities'),
+  (2, 'Groceries', 'Food at home'),
+  (3, 'Transport', 'Fuel, transit'),
+  (4, 'Dining out', 'Restaurants, delivery'),
+  (5, 'Subscriptions', 'Recurring services'),
+  (6, 'Entertainment', 'Movies, streaming'),
+  (7, 'Utilities', 'Water, power, internet');
