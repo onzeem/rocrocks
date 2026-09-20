@@ -33,3 +33,13 @@ build/
 .vscode/
 
 data/
+
+# SQLite Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Local environment / database logs
+*.db-journal
+*.db-shm
+*.db-wal
