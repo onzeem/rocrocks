@@ -161,9 +161,9 @@
     try {
       const txns = await apiGet(`/transactions/user/${DEMO_USER_ID}`);
       const mapped = txns.map(t => ({
-        merchant: t.description || t.categoryName,
-        category: t.categoryName,
-        type: "out",
+        merchant: t.description || t.categoryName || "Income",
+        category: t.categoryName || "Income",
+        type: t.type === "INCOME" ? "in" : "out",
         amount: t.amount,
         date: t.date,
       }));

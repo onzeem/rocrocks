@@ -49,19 +49,20 @@ INSERT INTO budget_categories (id, budget_id, category_id, allocated_amount) VAL
 -- amount on the budget itself (total_income above), not via transactions.
 -- home.html always maps every returned transaction as an expense ("out").
 
-INSERT INTO transactions (id, user_id, category_id, amount, date, description) VALUES
-  (1,  33, 2, 54.20,   '2026-09-19', 'Green Leaf Market'),
-  (2,  33, 1, 1365.00, '2026-09-17', 'Riverside Apartments'),
-  (3,  33, 4, 28.75,   '2026-09-16', 'Tanto Ramen'),
-  (4,  33, 3, 81.00,   '2026-09-15', 'Metro Transit Pass'),
-  (5,  33, 5, 9.99,    '2026-09-14', 'Cloudline Storage'),
-  (6,  33, 4, 41.10,   '2026-09-12', 'Basil & Vine'),
-  (7,  33, 2, 67.85,   '2026-09-10', 'Green Leaf Market'),
-  (8,  33, 7, 96.40,   '2026-09-08', 'City Water & Power'),
-  (9,  33, 5, 11.99,   '2026-09-06', 'SoundWave+'),
-  (10, 33, 3, 81.00,   '2026-09-05', 'Metro Transit Pass'),
-  (11, 33, 2, 48.60,   '2026-09-03', 'Green Leaf Market'),
-  (12, 33, 1, 1365.00, '2026-09-01', 'Riverside Apartments');
+INSERT INTO transactions (id, user_id, category_id, amount, date, description, type) VALUES
+  (1,  33, 2, 54.20,   '2026-09-19', 'Green Leaf Market', 'EXPENSE'),
+  (2,  33, 1, 1365.00, '2026-09-17', 'Riverside Apartments', 'EXPENSE'),
+  (3,  33, 4, 28.75,   '2026-09-16', 'Tanto Ramen', 'EXPENSE'),
+  (4,  33, 3, 81.00,   '2026-09-15', 'Metro Transit Pass', 'EXPENSE'),
+  (5,  33, 5, 9.99,    '2026-09-14', 'Cloudline Storage', 'EXPENSE'),
+  (6,  33, 4, 41.10,   '2026-09-12', 'Basil & Vine', 'EXPENSE'),
+  (7,  33, 2, 67.85,   '2026-09-10', 'Green Leaf Market', 'EXPENSE'),
+  (8,  33, 7, 96.40,   '2026-09-08', 'City Water & Power', 'EXPENSE'),
+  (9,  33, 5, 11.99,   '2026-09-06', 'SoundWave+', 'EXPENSE'),
+  (10, 33, 3, 81.00,   '2026-09-05', 'Metro Transit Pass', 'EXPENSE'),
+  (11, 33, 2, 48.60,   '2026-09-03', 'Green Leaf Market', 'EXPENSE'),
+  (12, 33, 1, 1365.00, '2026-09-01', 'Riverside Apartments', 'EXPENSE'),
+  (13, 33, null, 2950.00, '2026-09-18', 'Payroll deposit', 'INCOME');
 
 -- IMPORTANT: the tables above use auto-generated IDs (GenerationType.IDENTITY).
 -- Manually inserting explicit ID values, like above, doesn't tell H2's
@@ -71,4 +72,4 @@ INSERT INTO transactions (id, user_id, category_id, amount, date, description) V
 ALTER TABLE users ALTER COLUMN id RESTART WITH 34;
 ALTER TABLE budgets ALTER COLUMN id RESTART WITH 2;
 ALTER TABLE budget_categories ALTER COLUMN id RESTART WITH 8;
-ALTER TABLE transactions ALTER COLUMN id RESTART WITH 13;
+ALTER TABLE transactions ALTER COLUMN id RESTART WITH 14;

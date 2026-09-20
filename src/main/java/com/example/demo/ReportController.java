@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
@@ -41,8 +42,26 @@ public class ReportController {
         LocalDate start = ym.atDay(1);
         LocalDate end = ym.atEndOfMonth();
 
+        // Actual income for the month — summed directly from INCOME-type
+        // transactions, rather than the budget's own totalIncome field.
+        // That field is often just $0 now (e.g. budgets auto-created via
+        // addOrUpdateCategory never set it), so this reflects real
+        // tracked income instead of a number that may never get set.
+        List<Transaction> monthTransactions = transactionRepository.findByUserIdAndDateBetween(userId, start, end);
+
+        BigDecimal actualIncome = monthTransactions.stream()
+                .filter(t -> t.getType() == TransactionType.INCOME)
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Income transactions don't belong to a category (getCategory()
+        // is null for them) and shouldn't count as "spent" anywhere, so
+        // they're skipped entirely when building actualByCategory.
         Map<String, BigDecimal> actualByCategory = new LinkedHashMap<>();
-        for (Transaction t : transactionRepository.findByUserIdAndDateBetween(userId, start, end)) {
+        for (Transaction t : monthTransactions) {
+            if (t.getType() == TransactionType.INCOME || t.getCategory() == null) {
+                continue;
+            }
             String categoryName = t.getCategory().getName();
             actualByCategory.merge(categoryName, t.getAmount(), BigDecimal::add);
         }
@@ -51,12 +70,12 @@ public class ReportController {
         for (String categoryName : budgetedByCategory.keySet()) {
             BigDecimal budgeted = budgetedByCategory.get(categoryName);
             BigDecimal actual = actualByCategory.getOrDefault(categoryName, BigDecimal.ZERO);
-            merged.put(categoryName, new CategoryReportItem(categoryName, budgeted, actual, budget.getTotalIncome()));
+            merged.put(categoryName, new CategoryReportItem(categoryName, budgeted, actual, actualIncome));
         }
         for (String categoryName : actualByCategory.keySet()) {
             if (!merged.containsKey(categoryName)) {
                 merged.put(categoryName, new CategoryReportItem(categoryName, BigDecimal.ZERO,
-                actualByCategory.get(categoryName), budget.getTotalIncome()));
+                actualByCategory.get(categoryName), actualIncome));
             }
         }
 
@@ -66,7 +85,7 @@ public class ReportController {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BudgetVsActualReport report = new BudgetVsActualReport(
-                month, year, totalBudgeted, totalActual, budget.getTotalIncome(),
+                month, year, totalBudgeted, totalActual, actualIncome,
                 merged.values().stream().toList());
 
         return ResponseEntity.ok(report);

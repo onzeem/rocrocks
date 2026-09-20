@@ -30,13 +30,26 @@ public class TransactionController {
 
     @PostMapping
     public ResponseEntity<TransactionResponse> createTransaction(@RequestBody CreateTransactionRequest transactionRequest) {
-       User user = userRepository.findById(transactionRequest.getUserId())
+        User user = userRepository.findById(transactionRequest.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + transactionRequest.getUserId()));
-        Category category = categoryRepository.findById(transactionRequest.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found with ID: " + transactionRequest.getCategoryId()));
+
+        TransactionType type = transactionRequest.getType() != null ? transactionRequest.getType() : TransactionType.EXPENSE;
+
+        // Category is required for expenses (what was this money spent
+        // on?), but doesn't apply to income — a paycheck isn't "in" any
+        // spending category, so it's left null for INCOME transactions
+        // even if a categoryId happened to be sent.
+        Category category = null;
+        if (type == TransactionType.EXPENSE) {
+            if (transactionRequest.getCategoryId() == null) {
+                throw new RuntimeException("categoryId is required for an EXPENSE transaction");
+            }
+            category = categoryRepository.findById(transactionRequest.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Category not found with ID: " + transactionRequest.getCategoryId()));
+        }
 
         Transaction transaction = new Transaction(user, category, transactionRequest.getAmount(),
-                transactionRequest.getDescription(), transactionRequest.getDate());
+                transactionRequest.getDescription(), transactionRequest.getDate(), type);
         Transaction saved = transactionRepository.save(transaction);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(saved));
@@ -70,7 +83,8 @@ public class TransactionController {
         return ResponseEntity.noContent().build();
     }
     private TransactionResponse toResponse(Transaction t) {
-        return new TransactionResponse(t.getId(), t.getCategory().getName(), t.getAmount(),
-               t.getDescription(), t.getDate());
+        String categoryName = t.getCategory() != null ? t.getCategory().getName() : null;
+        return new TransactionResponse(t.getId(), categoryName, t.getAmount(),
+               t.getDescription(), t.getDate(), t.getType());
     }
 }

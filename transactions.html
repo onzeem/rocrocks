@@ -89,22 +89,30 @@
   const netEl = document.getElementById("stat-net");
 
   async function loadTransactionsPage() {
+    // Split into two independent try/catch blocks — if there's no budget
+    // yet for this month (the report call fails), the transaction list
+    // should still render normally rather than getting wiped out by an
+    // unrelated failure.
     try {
-      const [txns, report] = await Promise.all([
-        apiGet(`/transactions/user/${DEMO_USER_ID}`),
-        apiGet(`/reports/budget-vs-actual/user/${DEMO_USER_ID}/${YEAR}/${MONTH}`),
-      ]);
+      const txns = await apiGet(`/transactions/user/${DEMO_USER_ID}`);
 
       const mapped = txns.map(t => ({
-        merchant: t.description || t.categoryName,
-        category: t.categoryName,
-        type: "out",
+        merchant: t.description || t.categoryName || "Income",
+        category: t.categoryName || "Income",
+        type: t.type === "INCOME" ? "in" : "out",
         amount: t.amount,
         date: t.date,
       }));
 
       const sorted = [...mapped].sort((a, b) => (a.date < b.date ? 1 : -1));
       txnList.innerHTML = sorted.map(txnRowHtml).join("");
+    } catch (err) {
+      console.error("Failed to load transactions:", err);
+      txnList.innerHTML = `<li>No transactions found.</li>`;
+    }
+
+    try {
+      const report = await apiGet(`/reports/budget-vs-actual/user/${DEMO_USER_ID}/${YEAR}/${MONTH}`);
 
       const moneyIn = report.totalIncome;
       const moneyOut = report.totalActual;
@@ -113,10 +121,8 @@
       moneyInEl.textContent = formatMoney(moneyIn);
       moneyOutEl.textContent = formatMoney(moneyOut);
       netEl.textContent = `${net >= 0 ? "+" : "−"}${formatMoney(Math.abs(net))}`;
-
     } catch (err) {
-      console.error("Failed to load transactions:", err);
-      txnList.innerHTML = `<li>No transactions found.</li>`;
+      console.error("Failed to load budget report:", err);
     }
   }
 

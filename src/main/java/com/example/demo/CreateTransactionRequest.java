@@ -5,10 +5,11 @@ import java.time.LocalDate;
 
 public class CreateTransactionRequest {
     private Long userId;
-    private Long categoryId;
+    private Long categoryId; // required for EXPENSE, ignored/optional for INCOME
     private BigDecimal amount;
     private String description;
     private LocalDate date;
+    private TransactionType type = TransactionType.EXPENSE; // defaults to EXPENSE if omitted
 
     public CreateTransactionRequest() {}
 
@@ -26,4 +27,7 @@ public class CreateTransactionRequest {
 
     public LocalDate getDate() { return date; }
     public void setDate(LocalDate date) { this.date = date; }
+
+    public TransactionType getType() { return type; }
+    public void setType(TransactionType type) { this.type = type; }
 }

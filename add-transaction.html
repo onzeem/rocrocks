@@ -55,8 +55,15 @@
           <input type="text" id="txn-merchant" placeholder="e.g. Corner Bakery" required />
         </div>
         <div class="field">
+          <label for="txn-type">Type</label>
+          <select id="txn-type" required>
+            <option value="EXPENSE">Money out</option>
+            <option value="INCOME">Money in</option>
+          </select>
+        </div>
+        <div class="field" id="txn-category-field">
           <label for="txn-category">Category</label>
-          <select id="txn-category" required>
+          <select id="txn-category">
             <option value="" disabled selected>Choose a category…</option>
             <option value="1">🏠 Housing</option>
             <option value="2">🥑 Groceries</option>
@@ -86,28 +93,50 @@
   <script>
     const DEMO_USER_ID = 33;
 
+    const typeSelect = document.getElementById("txn-type");
+    const categoryField = document.getElementById("txn-category-field");
+    const categorySelect = document.getElementById("txn-category");
+
+    // Category only makes sense for an expense — hide it entirely for
+    // income, and don't require a choice that won't be sent anyway.
+    function updateCategoryVisibility() {
+      const isIncome = typeSelect.value === "INCOME";
+      categoryField.style.display = isIncome ? "none" : "";
+      categorySelect.required = !isIncome;
+    }
+    typeSelect.addEventListener("change", updateCategoryVisibility);
+    updateCategoryVisibility();
+
     document.getElementById("add-txn-form").addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const merchant = document.getElementById("txn-merchant").value.trim();
-      const categoryId = parseInt(document.getElementById("txn-category").value, 10);
+      const type = typeSelect.value; // "INCOME" or "EXPENSE"
       const amount = parseFloat(document.getElementById("txn-amount").value);
       const date = document.getElementById("txn-date").value;
 
-      if (!merchant || !categoryId || !amount || amount <= 0 || !date) return;
+      if (!merchant || !amount || amount <= 0 || !date) return;
+
+      const payload = {
+        userId: DEMO_USER_ID,
+        amount,
+        description: merchant,
+        date,
+        type,
+      };
+
+      if (type === "EXPENSE") {
+        const categoryId = parseInt(categorySelect.value, 10);
+        if (!categoryId) return;
+        payload.categoryId = categoryId;
+      }
 
       try {
-        await apiPost("/transactions", {
-          userId: DEMO_USER_ID,
-          categoryId,
-          amount,
-          description: merchant,
-          date,
-        });
+        await apiPost("/transactions", payload);
         window.location.href = "transactions.html";
       } catch (err) {
         console.error("Failed to add transaction:", err);
-        alert("Couldn't add that transaction — check the console for details.");
+        alert(err.message || "Couldn't add that transaction — check the console for details.");
       }
     });
   </script>
