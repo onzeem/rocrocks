@@ -20,4 +20,4 @@ We were able to connect the front end to a database we created in SQL, which nei
 java, html, javascript, css, sql
 
 ## Check it out!
-[\](https://github.com/onzeem/rocrocks.git)]
+[(https://github.com/onzeem/rocrocks.git)]
