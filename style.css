@@ -149,6 +149,22 @@ a h2{ color: black}
   padding: 0;
 }
 
+/* Signed-out visitors only see "About"; the real app links only appear
+    once auth.js confirms a signed-in session. Defaulting to "signed out"
+    here (rather than showing everything until JS says otherwise) avoids a
+    flash of the full app nav for someone who isn't actually signed in. */
+ .nav-app-link {
+   display: none;
+ }
+
+ .navbar.is-signed-in .nav-app-link {
+   display: inline-block;
+ }
+
+ .navbar.is-signed-in .nav-about-link {
+   display: none;
+ }
+
 .navbar a {
   display: inline-block;
   color: var(--ink);

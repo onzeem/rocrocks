@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Ledger — Receipt Upload</title>
+<title>ROC Rocks Budgeting — About</title>
 <link rel="stylesheet" href="style.css" />
 <script src="auth.js" defer></script>
 </head>
@@ -15,20 +15,21 @@
 
 <div class="shell">
 
-        <header class="masthead">
+    <header class="masthead">
     <div class="brand">
       <a href="home.html" class="brand-coin" aria-label="Go to home">$</a>
       <span class="brand-mark">ROC Rocks Budgeting</span>
+      <span class="brand-tag">Personal budget</span>
     </div>
     <div class="masthead-right">
       <nav class="navbar" aria-label="Primary">
           <ul>
               <li class="nav-app-link"><a href="home.html">Home</a></li>
-              <li class="nav-app-link"><a href="budget.html" class="active">Budget</a></li>
+              <li class="nav-app-link"><a href="budget.html">Budget</a></li>
               <li class="nav-app-link"><a href="receipt.html">Receipt Upload</a></li>
               <li class="nav-app-link"><a href="savings.html">Savings</a></li>
-              <li class="nav-app-link"><a href="transactions.html">Transactions</a></li>          
-              <li class="nav-about-link"><a href="about.html">About</a></li>          
+              <li class="nav-app-link"><a href="transactions.html">Transactions</a></li>
+              <li class="nav-about-link"><a href="about.html" class="active">About</a></li>
             </ul>
       </nav>
       <a href="signin.html" id="signin-cta" class="btn-signin">Sign in / Sign up</a>
@@ -42,17 +43,19 @@
     </div>
   </header>
 
-  <section class="section" aria-label="Receipt Upload">
-    <div class="section-head">
-      <h1>Receipt Upload</h1>
+  <div class="form-page-wrap">
+    <div class="auth-card" style="max-width: 520px;">
+      <p class="auth-eyebrow">About us</p>
+      <h1 class="auth-title">Budgeting that doesn't feel like a chore</h1>
+      <p class="auth-subtitle" style="margin-bottom: 0;">
+        ROC Rocks Budgeting helps you track spending, set savings goals, and
+        actually see where your money goes — without the spreadsheet
+        headache. Built for people who want a clear picture of their
+        finances, not another finance job to manage.
+      </p>
+      <p class="auth-switch">Ready to get started? <a href="signup.html">Create an account</a></p>
     </div>
-    <p>This page shares the same look via style.css — the header markup above is copy-pasted, but the styling is not.</p>
-  </section>
-
-  <footer class="footer">
-    <span>Statement generated Sep 19, 2026</span>
-    <span>All figures in USD</span>
-  </footer>
+  </div>
 
 </div>
 

@@ -16,7 +16,7 @@
 <div class="shell">
 
   <!-- Masthead -->
-    <header class="masthead">
+        <header class="masthead">
     <div class="brand">
       <a href="home.html" class="brand-coin" aria-label="Go to home">$</a>
       <span class="brand-mark">ROC Rocks Budgeting</span>
@@ -24,11 +24,12 @@
     <div class="masthead-right">
       <nav class="navbar" aria-label="Primary">
           <ul>
-              <li><a href="home.html" class="active">Home</a></li>
-              <li><a href="budget.html">Budget</a></li>
-              <li><a href="receipt.html">Receipt Upload</a></li>
-              <li><a href="savings.html">Savings</a></li>
-              <li><a href="transactions.html">Transactions</a></li>          
+              <li class="nav-app-link"><a href="home.html" class="active">Home</a></li>
+              <li class="nav-app-link"><a href="budget.html">Budget</a></li>
+              <li class="nav-app-link"><a href="receipt.html">Receipt Upload</a></li>
+              <li class="nav-app-link"><a href="savings.html">Savings</a></li>
+              <li class="nav-app-link"><a href="transactions.html">Transactions</a></li>          
+              <li class="nav-about-link"><a href="about.html">About</a></li>          
             </ul>
       </nav>
       <a href="signin.html" id="signin-cta" class="btn-signin">Sign in / Sign up</a>
@@ -174,6 +175,7 @@
           <div class="goal-card-header">
             <span class="cat-dot" style="background: #fff"><span class="cat-icon">${goal.icon}</span></span>
             <h3 class="goal-card-title">${goal.name}</h3>
+            <span class="cat-dot" style="background: #fff"><span class="cat-icon">${goal.af}</span></span>
           </div>
           <div class="goal-card-body">
             <div class="goal-card-ring-col">
@@ -187,6 +189,7 @@
               </div>
               <p class="goal-card-amount tabular">$${goal.saved.toLocaleString()}<span>of $${goal.target.toLocaleString()}</span></p>
             </div>
+
           </div>
         </article>
       `);

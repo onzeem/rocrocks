@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const profileBtn = document.getElementById("profile-btn");
   const profileMenu = document.getElementById("profile-menu");
   const signinCta = document.getElementById("signin-cta");
+  const navbar = document.querySelector(".navbar");
   const signedIn = isSignedIn();
 
   if (profileBtn) {
@@ -32,5 +33,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   if (signinCta) {
     signinCta.style.display = signedIn ? "none" : "inline-flex";
+  }
+  if (navbar) {
+    navbar.classList.toggle("is-signed-in", signedIn);
   }
 });
