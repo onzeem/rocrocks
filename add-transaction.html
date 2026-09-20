@@ -56,32 +56,24 @@
         </div>
         <div class="field">
           <label for="txn-category">Category</label>
-          <select id="txn-category">
+          <select id="txn-category" required>
             <option value="" disabled selected>Choose a category…</option>
-            <option value="Groceries">🥑 Groceries</option>
-            <option value="Income">💰 Income</option>
-            <option value="Housing">🏠 Housing</option>
-            <option value="Dining out">🍜 Dining out</option>
-            <option value="Transport">🚌 Transport</option>
-            <option value="Subscriptions">📺 Subscriptions</option>
-            <option value="Utilities">💧 Utilities</option>
-            <option value="Other">💳 Other</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="txn-type">Type</label>
-          <select id="txn-type">
-            <option value="out">Money out</option>
-            <option value="in">Money in</option>
+            <option value="1">🏠 Housing</option>
+            <option value="2">🥑 Groceries</option>
+            <option value="3">🚌 Transport</option>
+            <option value="4">🍜 Dining out</option>
+            <option value="5">📺 Subscriptions</option>
+            <option value="6">🎬 Entertainment</option>
+            <option value="7">💧 Utilities</option>
           </select>
         </div>
         <div class="field">
           <label for="txn-amount">Amount</label>
-          <input type="number" id="txn-amount" placeholder="0.00" step="0.01" min="0" required />
+          <input type="number" id="txn-amount" placeholder="0.00" step="0.01" min="0.01" required />
         </div>
         <div class="field">
           <label for="txn-date">Date</label>
-          <input type="date" id="txn-date" />
+          <input type="date" id="txn-date" required />
         </div>
         <button type="submit" class="btn-primary">Add transaction</button>
       </form>
@@ -90,59 +82,32 @@
     </div>
   </div>
 
-    <script src="api.js"></script>
+  <script src="api.js"></script>
   <script>
-    const CURRENT_USER_ID = localStorage.getItem("currentUserId") || 33;; // TODO: replace once real auth is wired in
-
-    const categorySelect = document.getElementById("txn-category");
-    let categoryMap = {}; // maps category name -> real database id
-
-    async function loadCategories() {
-      try {
-        const categories = await apiGet("/categories");
-        categorySelect.innerHTML = '<option value="" disabled selected>Choose a category…</option>';
-        categories.forEach(cat => {
-          categoryMap[cat.name] = cat.id;
-          const opt = document.createElement("option");
-          opt.value = cat.name;
-          opt.textContent = cat.name;
-          categorySelect.appendChild(opt);
-        });
-      } catch (err) {
-        console.error("Failed to load categories:", err);
-        alert("Couldn't load categories — is the backend running?");
-      }
-    }
-
-    loadCategories();
+    const DEMO_USER_ID = 33;
 
     document.getElementById("add-txn-form").addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const merchant = document.getElementById("txn-merchant").value.trim();
-      const categoryName = document.getElementById("txn-category").value;
+      const categoryId = parseInt(document.getElementById("txn-category").value, 10);
       const amount = parseFloat(document.getElementById("txn-amount").value);
-      const dateValue = document.getElementById("txn-date").value;
+      const date = document.getElementById("txn-date").value;
 
-      if (!merchant || !amount || amount <= 0 || !categoryName) return;
-
-      const categoryId = categoryMap[categoryName];
-      if (!categoryId) {
-        alert("Please choose a valid category.");
-        return;
-      }
+      if (!merchant || !categoryId || !amount || amount <= 0 || !date) return;
 
       try {
         await apiPost("/transactions", {
-          userId: Number(CURRENT_USER_ID),
-          categoryId: categoryId,
-          amount: amount,
+          userId: DEMO_USER_ID,
+          categoryId,
+          amount,
           description: merchant,
-          date: dateValue || new Date().toISOString().slice(0, 10),
+          date,
         });
         window.location.href = "transactions.html";
       } catch (err) {
-        alert("Failed to add transaction: " + err.message);
+        console.error("Failed to add transaction:", err);
+        alert("Couldn't add that transaction — check the console for details.");
       }
     });
   </script>

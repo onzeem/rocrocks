@@ -62,3 +62,13 @@ INSERT INTO transactions (id, user_id, category_id, amount, date, description) V
   (10, 33, 3, 81.00,   '2026-09-05', 'Metro Transit Pass'),
   (11, 33, 2, 48.60,   '2026-09-03', 'Green Leaf Market'),
   (12, 33, 1, 1365.00, '2026-09-01', 'Riverside Apartments');
+
+-- IMPORTANT: the tables above use auto-generated IDs (GenerationType.IDENTITY).
+-- Manually inserting explicit ID values, like above, doesn't tell H2's
+-- internal identity counter to skip past them — without the RESTART WITH
+-- statements below, the very next row the app tries to insert (e.g. through
+-- add-transaction.html) collides head-on with one of these seeded IDs.
+ALTER TABLE users ALTER COLUMN id RESTART WITH 34;
+ALTER TABLE budgets ALTER COLUMN id RESTART WITH 2;
+ALTER TABLE budget_categories ALTER COLUMN id RESTART WITH 8;
+ALTER TABLE transactions ALTER COLUMN id RESTART WITH 13;
