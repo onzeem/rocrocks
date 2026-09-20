@@ -1,4 +1,5 @@
 package com.example.demo;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -53,6 +54,46 @@ public class BudgetController {
 
         Budget saved = budgetRepository.save(budget);
         return ResponseEntity.status(HttpStatus.CREATED).body(toSummary(saved));
+    }
+
+    /**
+     * Adds a category limit to the given month's budget — creating that
+     * month's budget first (with $0 income) if it doesn't exist yet, or
+     * updating the amount in place if this category is already on it.
+     *
+     * Unlike createBudget above, this is safe to call repeatedly: the
+     * first call for a given user/month/year creates the budget; every
+     * call after that (that month, or category) just adds or updates
+     * one category on whichever budget already matches.
+     */
+    @PostMapping("/user/{userId}/{year}/{month}/categories")
+    public ResponseEntity<BudgetSummaryResponse> addOrUpdateCategory(
+            @PathVariable Long userId, @PathVariable int year, @PathVariable int month,
+            @RequestBody CategoryAllocationRequest allocation) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+        Budget budget = budgetRepository.findByUserIdAndMonthAndYear(userId, month, year)
+                .orElseGet(() -> budgetRepository.save(new Budget(user, month, year, BigDecimal.ZERO)));
+
+        Category category = categoryRepository.findById(allocation.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Category not found with ID: " + allocation.getCategoryId()));
+
+        boolean updatedExisting = false;
+        for (BudgetCategory bc : budget.getBudgetCategories()) {
+            if (bc.getCategory().getId().equals(category.getId())) {
+                bc.setAllocatedAmount(allocation.getAmount());
+                updatedExisting = true;
+                break;
+            }
+        }
+        if (!updatedExisting) {
+            budget.addBudgetCategory(new BudgetCategory(category, allocation.getAmount()));
+        }
+
+        Budget saved = budgetRepository.save(budget);
+        return ResponseEntity.ok(toSummary(saved));
     }
 
     @GetMapping("/{id}/summary")

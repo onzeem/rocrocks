@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ROC Rocks Budgeting — Add a Budget Category</title>
+<link rel="stylesheet" href="style.css" />
+<script src="auth.js" defer></script>
+</head>
+<body>
+
+<div class="confetti" aria-hidden="true">
+  <span></span><span></span><span></span><span></span><span></span>
+</div>
+
+<div class="shell">
+
+    <header class="masthead">
+    <div class="brand">
+      <a href="home.html" class="brand-coin" aria-label="Go to home">$</a>
+      <span class="brand-mark">ROC Rocks Budgeting</span>
+      <span class="brand-tag">Personal budget</span>
+    </div>
+    <div class="masthead-right">
+      <nav class="navbar" aria-label="Primary">
+          <ul>
+              <li class="nav-app-link"><a href="home.html">Home</a></li>
+              <li class="nav-app-link"><a href="budget.html" class="active">Budget</a></li>
+              <li class="nav-app-link"><a href="receipt.html">Receipt Upload</a></li>
+              <li class="nav-app-link"><a href="savings.html">Savings</a></li>
+              <li class="nav-app-link"><a href="transactions.html">Transactions</a></li>
+              <li class="nav-about-link"><a href="about.html">About</a></li>
+          </ul>
+      </nav>
+      <a href="signin.html" id="signin-cta" class="btn-signin">Sign in / Sign up</a>
+      <div class="profile-menu" id="profile-menu">
+        <a href="signin.html" id="profile-btn" class="profile-btn" aria-label="Open profile page">👤</a>
+        <div class="profile-dropdown">
+          <a href="profile.html">Profile</a>
+          <a href="settings.html">Settings</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="form-page-wrap">
+    <div class="auth-card" style="max-width: 420px;">
+      <p class="auth-eyebrow">Budget category</p>
+      <h1 class="auth-title">Add a category limit</h1>
+      <p class="auth-subtitle">Applies to this month — pick a category and set what you want to spend.</p>
+
+      <form class="auth-form" id="add-budget-form">
+        <div class="field">
+          <label for="new-cat-id">Category</label>
+          <select id="new-cat-id" required>
+            <option value="1">🏠 Housing</option>
+            <option value="2">🥑 Groceries</option>
+            <option value="3">🚌 Transport</option>
+            <option value="4">🍜 Dining out</option>
+            <option value="5">📺 Subscriptions</option>
+            <option value="6">🎬 Entertainment</option>
+            <option value="7">💧 Utilities</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="new-cat-amount">Amount</label>
+          <input type="number" id="new-cat-amount" placeholder="0.00" step="0.01" min="0.01" required />
+        </div>
+
+        <button type="submit" class="btn-primary">Add category</button>
+      </form>
+
+      <p class="auth-switch"><a href="budget.html">Cancel and go back</a></p>
+    </div>
+  </div>
+
+  <script src="api.js"></script>
+  <script>
+    const DEMO_USER_ID = 33;
+
+    // The budget resets every month rather than being something you pick —
+    // always uses whatever month/year it actually is right now, matching
+    // the same YEAR/MONTH logic home.html and budget.html already use.
+    const now = new Date();
+    const YEAR = now.getFullYear();
+    const MONTH = now.getMonth() + 1;
+
+    document.getElementById("add-budget-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const categoryId = parseInt(document.getElementById("new-cat-id").value, 10);
+      const amount = parseFloat(document.getElementById("new-cat-amount").value);
+
+      if (!amount || amount <= 0) return;
+
+      try {
+        // Creates this month's budget automatically if it doesn't exist
+        // yet, or adds/updates this one category if it already does —
+        // safe to call again next month, or for another category today.
+        await apiPost(`/budgets/user/${DEMO_USER_ID}/${YEAR}/${MONTH}/categories`, {
+          categoryId,
+          amount,
+        });
+        window.location.href = "budget.html";
+      } catch (err) {
+        console.error("Failed to add category:", err);
+        alert(err.message || "Couldn't add that category — check the console for details.");
+      }
+    });
+  </script>
+
+</div>
+
+</body>
+</html>
