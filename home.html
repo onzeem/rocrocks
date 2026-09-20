@@ -69,7 +69,7 @@
     <div class="stat">
       <p class="label">Saved</p>
       <p class="figure tabular">$614</p>
-      <span class="delta">10% of income 🎯</span>
+      <span class="delta">67% of income 🎯</span>
     </div>
   </section>
 
@@ -133,17 +133,14 @@
     const categoryRows = document.getElementById("category-rows");
     try {
       const report = await apiGet(`/reports/budget-vs-actual/user/${DEMO_USER_ID}/${YEAR}/${MONTH}`);
-      const merged = report.categories.map(rc => {
-        const meta = categories.find(c => c.name === rc.categoryName);
-        return {
-          name: rc.categoryName,
-          icon: meta ? meta.icon : "💳",
-          color: meta ? meta.color : "sky",
-          cap: meta ? meta.cap : "",
-          spent: rc.actual,
-          budget: rc.budgeted,
-        };
-      });
+      const merged = report.categories.map(rc => ({
+        name: rc.categoryName,
+        icon: rc.icon,
+        color: rc.color,
+        cap: rc.description || "",
+        spent: rc.actual,
+        budget: rc.budgeted,
+      }));
       const sorted = [...merged].sort((a, b) => {
         const aOver = a.spent > a.budget ? 1 : 0;
         const bOver = b.spent > b.budget ? 1 : 0;

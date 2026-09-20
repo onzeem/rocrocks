@@ -86,17 +86,14 @@
     try {
       const report = await apiGet(`/reports/budget-vs-actual/user/${DEMO_USER_ID}/${YEAR}/${MONTH}`);
 
-      const merged = report.categories.map(rc => {
-        const meta = categories.find(c => c.name === rc.categoryName);
-        return {
-          name: rc.categoryName,
-          icon: meta ? meta.icon : "💳",
-          color: meta ? meta.color : "sky",
-          cap: meta ? meta.cap : "",
-          spent: rc.actual,
-          budget: rc.budgeted,
-        };
-      });
+      const merged = report.categories.map(rc => ({
+        name: rc.categoryName,
+        icon: rc.icon,
+        color: rc.color,
+        cap: rc.description || "",
+        spent: rc.actual,
+        budget: rc.budgeted,
+      }));
 
       // Pie chart: top 5 by budgeted amount, plus "Other" for the rest
       const sorted = [...merged].sort((a, b) => b.budget - a.budget);

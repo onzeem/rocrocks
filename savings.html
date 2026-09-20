@@ -51,6 +51,21 @@
       <a href="add-goal.html" class="btn-primary">+ Add goal</a>
     </div>
 
+    <section class="stat-row" aria-label="This month's savings allocation" id="allocation-summary" style="margin-bottom: 20px;">
+      <div class="stat">
+        <p class="label">Total saved</p>
+        <p class="figure tabular" id="summary-total-saved">—</p>
+      </div>
+      <div class="stat">
+        <p class="label">Available to save</p>
+        <p class="figure tabular" id="summary-cap">—</p>
+      </div>
+      <div class="stat">
+        <p class="label">Unallocated</p>
+        <p class="figure tabular" id="summary-remaining">—</p>
+      </div>
+    </section>
+
     <div class="goal-card-grid" id="goal-card-grid"></div>
   </section>
 
@@ -62,14 +77,28 @@
     const r = 40;
     const circumference = 2 * Math.PI * r;
 
+    async function loadAllocationSummary() {
+      try {
+        const summary = await apiGet(`/savings-goals/user/${DEMO_USER_ID}/allocation-summary`);
+        document.getElementById("summary-cap").textContent = `$${summary.availableToSave.toLocaleString()}`;
+        document.getElementById("summary-remaining").textContent = `$${summary.remaining.toLocaleString()}`;
+      } catch (err) {
+        console.error("Failed to load allocation summary:", err);
+      }
+    }
+
     async function loadGoals() {
       try {
         const goals = await apiGet(`/savings-goals/user/${DEMO_USER_ID}`);
         document.getElementById("goal-count").textContent = `${goals.length} active`;
 
+        const totalSaved = goals.reduce((sum, g) => sum + g.savedAmount, 0);
+        document.getElementById("summary-total-saved").textContent = `$${totalSaved.toLocaleString()}`;
+
         grid.innerHTML = goals.map((goal) => {
-          const pct = goal.percentFunded;
-          const offset = (circumference * (1 - pct / 100)).toFixed(1);
+          const pct = goal.percentFunded; // can exceed 100 once over-funding is allowed
+          const ringPct = Math.min(100, pct); // ring visually caps at a full circle regardless
+          const offset = (circumference * (1 - ringPct / 100)).toFixed(1);
 
           const dueDateHtml = goal.dueDate
             ? `<span class="goal-card-due">📅 ${new Date(goal.dueDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", year: "numeric" })}</span>`
@@ -96,19 +125,17 @@
                     </svg>
                     <span class="goal-ring-pct">${pct}%</span>
                   </div>
+                  ${noteHtml}
                 </div>
                 <div class="goal-card-info-col">
                   <p class="goal-card-amount tabular">$${goal.savedAmount.toLocaleString()}<span>of $${goal.targetAmount.toLocaleString()}</span></p>
-                  ${noteHtml}
                   ${dueDateHtml}
-                  ${!goal.fullyFunded ? `
-                    <div class="txn-form" style="margin-top: 10px;">
-                      <div class="field" style="flex: 1 1 90px;">
-                        <input type="number" id="allocate-amount-${goal.id}" placeholder="0.00" step="0.01" min="0.01" />
-                      </div>
-                      <button type="button" class="btn-primary" style="margin-top: 0;" data-allocate="${goal.id}">Add funds</button>
+                  <div class="txn-form" style="margin-top: 10px;">
+                    <div class="field" style="flex: 1 1 90px;">
+                      <input type="number" id="allocate-amount-${goal.id}" placeholder="0.00" step="0.01" min="0.01" />
                     </div>
-                  ` : ""}
+                    <button type="button" class="btn-primary" style="margin-top: 0;" data-allocate="${goal.id}">Add funds</button>
+                  </div>
                 </div>
               </div>
             </article>
@@ -132,6 +159,7 @@
       try {
         await apiPost(`/savings-goals/${goalId}/allocate`, { amount });
         loadGoals(); // re-render with the updated saved amount / ring / A-F tag
+        loadAllocationSummary(); // reflect the new allocated/remaining totals immediately
       } catch (err) {
         console.error("Failed to allocate funds:", err);
         alert(err.message || "Couldn't add funds — check the console for details.");
@@ -139,6 +167,7 @@
     }
 
     loadGoals();
+    loadAllocationSummary();
   </script>
 
   <footer class="footer">

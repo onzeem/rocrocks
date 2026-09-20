@@ -5,14 +5,21 @@ import java.math.RoundingMode;
 
 public class CategoryReportItem {
     private String categoryName;
+    private String icon;
+    private String color;
+    private String description;
     private BigDecimal budgeted;
     private BigDecimal actual;
     private BigDecimal difference;
     private BigDecimal percentOfIncomeSpent;
     private boolean overBudget;
 
-    public CategoryReportItem(String categoryName, BigDecimal budgeted, BigDecimal actual, BigDecimal totalIncome) {
+    public CategoryReportItem(String categoryName, String icon, String color, String description,
+                               BigDecimal budgeted, BigDecimal actual, BigDecimal totalIncome) {
         this.categoryName = categoryName;
+        this.icon = icon;
+        this.color = color;
+        this.description = description;
         this.budgeted = budgeted;
         this.actual = actual;
         this.difference = budgeted.subtract(actual);
@@ -29,6 +36,9 @@ public class CategoryReportItem {
     }
 
     public String getCategoryName() { return categoryName; }
+    public String getIcon() { return icon; }
+    public String getColor() { return color; }
+    public String getDescription() { return description; }
     public BigDecimal getBudgeted() { return budgeted; }
     public BigDecimal getActual() { return actual; }
     public BigDecimal getDifference() { return difference; }

@@ -21,14 +21,14 @@ INSERT INTO users (id, name, email) VALUES (33, 'Test User', 'test@example.com')
 -- Names/order match categories-data.js on the frontend (icons/colors live
 -- there, not in this table — the frontend looks up icon/color by name).
 
-INSERT INTO categories (id, name, description) VALUES
-  (1, 'Housing', 'Rent, utilities'),
-  (2, 'Groceries', 'Food at home'),
-  (3, 'Transport', 'Fuel, transit'),
-  (4, 'Dining out', 'Restaurants, delivery'),
-  (5, 'Subscriptions', 'Recurring services'),
-  (6, 'Entertainment', 'Movies, streaming'),
-  (7, 'Utilities', 'Water, power, internet');
+INSERT INTO categories (id, name, description, icon, color) VALUES
+  (1, 'Housing', 'Rent, utilities', '🏠', 'grape'),
+  (2, 'Groceries', 'Food at home', '🥑', 'mint'),
+  (3, 'Transport', 'Fuel, transit', '🚌', 'yellow'),
+  (4, 'Dining out', 'Restaurants, delivery', '🍜', 'coral'),
+  (5, 'Subscriptions', 'Recurring services', '📺', 'pink'),
+  (6, 'Entertainment', 'Movies, streaming', '🎬', 'sky'),
+  (7, 'Utilities', 'Water, power, internet', '💧', 'teal');
 
 -- Budget for September 2026 --------------------------------------------------
 
@@ -62,14 +62,17 @@ INSERT INTO transactions (id, user_id, category_id, amount, date, description, t
   (10, 33, 3, 81.00,   '2026-09-05', 'Metro Transit Pass', 'EXPENSE'),
   (11, 33, 2, 48.60,   '2026-09-03', 'Green Leaf Market', 'EXPENSE'),
   (12, 33, 1, 1365.00, '2026-09-01', 'Riverside Apartments', 'EXPENSE'),
-  (13, 33, null, 2950.00, '2026-09-18', 'Payroll deposit', 'INCOME');
+  (13, 33, null, 2950.00, '2026-09-18', 'Payroll deposit', 'INCOME'),
+  (14, 33, null, 2950.00, '2026-09-04', 'Payroll deposit', 'INCOME'),
+  (15, 33, null, 3000.00, '2026-09-10', 'Freelance payment', 'INCOME'),
+  (16, 33, null, 3100.00, '2026-09-15', 'Year-end bonus', 'INCOME');
 
 -- Savings goals -------------------------------------------------------------
 
 INSERT INTO savings_goals (id, user_id, name, icon, color, target_amount, saved_amount, due_date, note) VALUES
-  (1, 33, 'Emergency fund', '🛟', 'grape', 6000.00, 4200.00, null,          'On pace to finish by January 🎉'),
+  (1, 33, 'Emergency fund', '🛟', 'grape', 6000.00, 4200.00, null, null),
   (2, 33, 'Iceland trip',   '✈️', 'coral', 2500.00, 980.00,  '2027-06-01', 'Add $130/mo to make the June date'),
-  (3, 33, 'New laptop',     '💻', 'mint',  1100.00, 1100.00, null,          'Fully funded — go treat yourself');
+  (3, 33, 'New laptop',     '💻', 'mint',  1100.00, 1100.00, null, null);
 
 -- IMPORTANT: the tables above use auto-generated IDs (GenerationType.IDENTITY).
 -- Manually inserting explicit ID values, like above, doesn't tell H2's
@@ -79,5 +82,5 @@ INSERT INTO savings_goals (id, user_id, name, icon, color, target_amount, saved_
 ALTER TABLE users ALTER COLUMN id RESTART WITH 34;
 ALTER TABLE budgets ALTER COLUMN id RESTART WITH 2;
 ALTER TABLE budget_categories ALTER COLUMN id RESTART WITH 8;
-ALTER TABLE transactions ALTER COLUMN id RESTART WITH 14;
+ALTER TABLE transactions ALTER COLUMN id RESTART WITH 17;
 ALTER TABLE savings_goals ALTER COLUMN id RESTART WITH 4;

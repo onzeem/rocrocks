@@ -24,6 +24,10 @@
   --sky-tint:   #DDEEFF;
   --gray:       #9AA0AE;
   --gray-tint:  #E7E9ED;
+  --gold:       #C9982E;
+  --gold-tint:  #F5E9CE;
+  --teal:       #2F9C95;
+  --teal-tint:  #D8EFEC;
 
   --display: 'Baloo 2', system-ui, sans-serif;
   --sans: 'Nunito Sans', system-ui, -apple-system, sans-serif;
@@ -722,6 +726,7 @@ background: linear-gradient(to right, var(--coral) 0, var(--coral) calc(100% - 8
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0; /* lets it shrink below its input's natural width when it's a flex child (e.g. inside .txn-form) */
 }
 
 .field label {
@@ -730,6 +735,8 @@ background: linear-gradient(to right, var(--coral) 0, var(--coral) calc(100% - 8
 }
 
 .field input, .field select{
+  width: 100%;
+  box-sizing: border-box;
   font-family: var(--sans);
   font-size: 15px;
   padding: 12px 14px;
@@ -994,6 +1001,7 @@ background: linear-gradient(to right, var(--coral) 0, var(--coral) calc(100% - 8
   border-radius: var(--radius-lg);
   padding: 24px 22px 24px;
   text-align: left;
+  min-width: 0; /* grid items default to min-width: auto, which can force the track wider than intended */
 }
 
 .goal-card-badge {
@@ -1041,6 +1049,14 @@ background: linear-gradient(to right, var(--coral) 0, var(--coral) calc(100% - 8
   width: 160px;
   text-align: center;
   margin: 0;
+}
+
+.goal-card-desc {
+  margin: 10px 0 0;
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-soft);
 }
 
 .goal-card-info-col {

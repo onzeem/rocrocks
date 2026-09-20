@@ -1,6 +1,8 @@
 package com.example.demo;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,10 +22,14 @@ public class SavingsGoalController {
 
     private final SavingsGoalRepository savingsGoalRepository;
     private final UserRepository userRepository;
+    private final TransactionRepository transactionRepository;
 
-    public SavingsGoalController(SavingsGoalRepository savingsGoalRepository, UserRepository userRepository) {
+    public SavingsGoalController(SavingsGoalRepository savingsGoalRepository,
+                                  UserRepository userRepository,
+                                  TransactionRepository transactionRepository) {
         this.savingsGoalRepository = savingsGoalRepository;
         this.userRepository = userRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     @PostMapping
@@ -59,9 +65,34 @@ public class SavingsGoalController {
     }
 
     /**
+     * How much is genuinely available to save this month, how much is
+     * already sitting in savings goals (savedAmount already includes
+     * everything — whatever was preloaded plus anything allocated
+     * later, since addFunds() just adds onto whatever's already there),
+     * and how much is left over after that. Used by savings.html to
+     * show a summary above the goal cards.
+     */
+    @GetMapping("/user/{userId}/allocation-summary")
+    public ResponseEntity<SavingsAllocationSummaryResponse> getAllocationSummary(@PathVariable Long userId) {
+        BigDecimal availableToSave = getAvailableToSave(userId);
+        BigDecimal totalSaved = getTotalSaved(userId);
+        BigDecimal remaining = availableToSave.subtract(totalSaved).max(BigDecimal.ZERO);
+
+        return ResponseEntity.ok(new SavingsAllocationSummaryResponse(availableToSave, totalSaved, remaining));
+    }
+
+    /**
      * Adds money toward an existing goal — e.g. "I just put $50 toward
      * my Iceland trip." Increments savedAmount in place rather than
      * requiring the whole goal to be recreated or replaced.
+     *
+     * Capped against real cash flow this month — "available to save" is
+     * actual INCOME-type transaction totals minus actual EXPENSE-type
+     * transaction totals, not a fixed preset number. Whatever's already
+     * saved across every one of the user's goals (savedAmount already
+     * includes preloaded starting amounts, not just prior allocations)
+     * is subtracted from that, so a request is only approved if it fits
+     * within what's genuinely left over.
      */
     @PostMapping("/{id}/allocate")
     public ResponseEntity<SavingsGoalResponse> allocateFunds(
@@ -74,9 +105,53 @@ public class SavingsGoalController {
             throw new RuntimeException("amount must be greater than 0");
         }
 
+        Long userId = goal.getUser().getId();
+
+        BigDecimal availableToSave = getAvailableToSave(userId);
+        BigDecimal totalSaved = getTotalSaved(userId);
+        BigDecimal remaining = availableToSave.subtract(totalSaved).max(BigDecimal.ZERO);
+
+        if (request.getAmount().compareTo(remaining) > 0) {
+            throw new RuntimeException("Only $" + remaining + " left available to save");
+        }
+
         goal.addFunds(request.getAmount());
-        SavingsGoal saved = savingsGoalRepository.save(goal);
-        return ResponseEntity.ok(toResponse(saved));
+        SavingsGoal savedGoal = savingsGoalRepository.save(goal);
+
+        return ResponseEntity.ok(toResponse(savedGoal));
+    }
+
+    // Real income minus real expenses this month, floored at 0 — summed
+    // straight from actual Transaction rows, the same way ReportController
+    // computes them for the budget-vs-actual report.
+    private BigDecimal getAvailableToSave(Long userId) {
+        YearMonth currentMonth = YearMonth.now();
+        LocalDate monthStart = currentMonth.atDay(1);
+        LocalDate monthEnd = currentMonth.atEndOfMonth();
+
+        List<Transaction> monthTransactions = transactionRepository.findByUserIdAndDateBetween(userId, monthStart, monthEnd);
+
+        BigDecimal income = monthTransactions.stream()
+                .filter(t -> t.getType() == TransactionType.INCOME)
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal expenses = monthTransactions.stream()
+                .filter(t -> t.getType() == TransactionType.EXPENSE)
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return income.subtract(expenses).max(BigDecimal.ZERO);
+    }
+
+    // Sum of savedAmount across every one of the user's goals — this
+    // already includes whatever was preloaded (e.g. from data.sql) as
+    // well as anything added later through allocateFunds, since
+    // SavingsGoal.addFunds() just adds onto whatever's already there.
+    private BigDecimal getTotalSaved(Long userId) {
+        return savingsGoalRepository.findByUserId(userId).stream()
+                .map(SavingsGoal::getSavedAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @DeleteMapping("/{id}")

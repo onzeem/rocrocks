@@ -34,8 +34,10 @@ public class ReportController {
                         "No budget found for user " + userId + " in " + month + "/" + year));
 
         Map<String, BigDecimal> budgetedByCategory = new LinkedHashMap<>();
+        Map<String, Category> categoryByName = new LinkedHashMap<>();
         for (BudgetCategory bc : budget.getBudgetCategories()) {
             budgetedByCategory.put(bc.getCategory().getName(), bc.getAllocatedAmount());
+            categoryByName.put(bc.getCategory().getName(), bc.getCategory());
         }
 
         YearMonth ym = YearMonth.of(year, month);
@@ -64,18 +66,27 @@ public class ReportController {
             }
             String categoryName = t.getCategory().getName();
             actualByCategory.merge(categoryName, t.getAmount(), BigDecimal::add);
+            // A category might have actual spending this month without
+            // being on the budget at all — still need its icon/color,
+            // so record it here too if budgetedByCategory didn't already.
+            categoryByName.putIfAbsent(categoryName, t.getCategory());
         }
 
         Map<String, CategoryReportItem> merged = new LinkedHashMap<>();
         for (String categoryName : budgetedByCategory.keySet()) {
             BigDecimal budgeted = budgetedByCategory.get(categoryName);
             BigDecimal actual = actualByCategory.getOrDefault(categoryName, BigDecimal.ZERO);
-            merged.put(categoryName, new CategoryReportItem(categoryName, budgeted, actual, actualIncome));
+            Category category = categoryByName.get(categoryName);
+            merged.put(categoryName, new CategoryReportItem(
+                    categoryName, category.getIcon(), category.getColor(), category.getDescription(),
+                    budgeted, actual, actualIncome));
         }
         for (String categoryName : actualByCategory.keySet()) {
             if (!merged.containsKey(categoryName)) {
-                merged.put(categoryName, new CategoryReportItem(categoryName, BigDecimal.ZERO,
-                actualByCategory.get(categoryName), actualIncome));
+                Category category = categoryByName.get(categoryName);
+                merged.put(categoryName, new CategoryReportItem(
+                        categoryName, category.getIcon(), category.getColor(), category.getDescription(),
+                        BigDecimal.ZERO, actualByCategory.get(categoryName), actualIncome));
             }
         }
 
