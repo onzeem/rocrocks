@@ -72,6 +72,6 @@ public class TransactionController {
 
     private TransactionResponse toResponse(Transaction t) {
         return new TransactionResponse(t.getId(), t.getCategory().getName(), t.getAmount(),
-                t.getDescription(), t.getDate());
+                t.getDate(), t.getDescription());
     }
 }
