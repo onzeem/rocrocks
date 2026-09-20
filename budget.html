@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ROC Rocks Budgeting — Budget</title>
+<link rel="stylesheet" href="style.css" />
+<script src="auth.js" defer></script>
+</head>
+<body>
+
+<div class="confetti" aria-hidden="true">
+  <span></span><span></span><span></span><span></span><span></span>
+</div>
+
+<div class="shell">
+
+  <header class="masthead">
+    <div class="brand">
+      <a href="home.html" class="brand-coin" aria-label="Go to home">$</a>
+      <span class="brand-mark">ROC Rocks Budgeting</span>
+    </div>
+    <div class="masthead-right">
+      <nav class="navbar" aria-label="Primary">
+          <ul>
+              <li><a href="home.html">Home</a></li>
+              <li><a href="budget.html" class="active">Budget</a></li>
+              <li><a href="receipt.html">Receipt Upload</a></li>
+              <li><a href="savings.html">Savings</a></li>
+              <li><a href="transactions.html">Transactions</a></li>
+          </ul>
+      </nav>
+      <a href="signin.html" id="signin-cta" class="btn-signin">Sign in / Sign up</a>
+      <div class="profile-menu" id="profile-menu">
+        <a href="signin.html" id="profile-btn" class="profile-btn" aria-label="Open profile page">👤</a>
+        <div class="profile-dropdown">
+          <a href="profile.html">Profile</a>
+          <a href="settings.html">Settings</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="section-head">
+      <h1>Budget</h1>
+    </div>
+  <!-- Pie chart hero: how the budget is split across categories -->
+  <section class="budget-hero" aria-label="Budget split by category">
+    <div class="budget-hero-body">
+      <div class="pie-chart-wrap">
+        <div class="pie-chart" id="pie-chart" role="img"></div>
+      </div>
+      <div class="pie-legend" id="pie-legend"></div>
+    </div>
+  </section>
+
+  <!-- Category bars, same style as the dashboard -->
+  <section class="section" aria-label="Spending by category">
+    <div class="section-head">
+      <div class="section-head-title">
+        <h2>Categories</h2>
+        <span class="meta">18 days into the month</span>
+      </div>
+    </div>
+
+    <div id="category-rows"></div>
+  </section>
+
+  <footer class="footer">
+    <span>Statement generated Sep 19, 2026</span>
+    <span>All figures in USD</span>
+  </footer>
+
+  <script src="categories-data.js"></script>
+  <script>
+    // categories array + categoryRowHtml() come from categories-data.js,
+    // shared with home.html — add or edit a category there and both the
+    // pie chart and the bars below update automatically.
+    //
+    // The hero pie/legend shows the top 5 categories by budgeted amount,
+    // individually, plus a 6th "Other" gray slice that sums up whatever's
+    // left over — so it always has exactly 6 slices no matter how many
+    // categories exist. The full bar list below still shows every real
+    // category on its own, "Other" is only a pie/legend concept.
+    const sorted = [...categories].sort((a, b) => b.budget - a.budget);
+    const topFive = sorted.slice(0, 5);
+    const rest = sorted.slice(5);
+    const otherTotal = rest.reduce((sum, c) => sum + c.budget, 0);
+ 
+    const pieSlices = [...topFive];
+    if (otherTotal > 0) {
+      pieSlices.push({ name: "Other", color: "gray", budget: otherTotal });
+    }
+ 
+    const pieTotal = pieSlices.reduce((sum, c) => sum + c.budget, 0);
+ 
+    // Build the conic-gradient stops and legend from the same numbers.
+    let cumulative = 0;
+    const gradientStops = pieSlices.map((c) => {
+      const start = cumulative;
+      cumulative += (c.budget / pieTotal) * 100;
+      return `var(--${c.color}) ${start.toFixed(1)}% ${cumulative.toFixed(1)}%`;
+    });
+ 
+    const pieChart = document.getElementById("pie-chart");
+    pieChart.style.background = `conic-gradient(${gradientStops.join(", ")})`;
+    pieChart.setAttribute(
+      "aria-label",
+      "Pie chart: " + pieSlices.map((c) => `${c.name} ${Math.round((c.budget / pieTotal) * 100)}%`).join(", ")
+    );
+ 
+    const legend = document.getElementById("pie-legend");
+    pieSlices.forEach((c) => {
+      const pct = Math.round((c.budget / pieTotal) * 100);
+      legend.insertAdjacentHTML("beforeend", `
+        <div class="pie-legend-item">
+          <span class="pie-swatch" style="background: var(--${c.color})"></span>
+          ${c.name}
+          <span class="pie-legend-amount">$${c.budget.toLocaleString()} · ${pct}%</span>
+        </div>
+      `);
+    });
+ 
+    const rows = document.getElementById("category-rows");
+    // Over-budget categories float to the top — see categoriesSortedByOverBudget()
+    // in categories-data.js.
+    categoriesSortedByOverBudget().forEach((c) => {
+      rows.insertAdjacentHTML("beforeend", categoryRowHtml(c));
+    });
+  </script>
+
+</div>
+
+</body>
+</html>

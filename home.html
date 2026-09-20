@@ -18,16 +18,18 @@
   <!-- Masthead -->
     <header class="masthead">
     <div class="brand">
-      <span class="brand-coin">$</span>
+      <a href="home.html" class="brand-coin" aria-label="Go to home">$</a>
       <span class="brand-mark">ROC Rocks Budgeting</span>
     </div>
     <div class="masthead-right">
       <nav class="navbar" aria-label="Primary">
           <ul>
               <li><a href="home.html" class="active">Home</a></li>
+              <li><a href="budget.html">Budget</a></li>
               <li><a href="receipt.html">Receipt Upload</a></li>
               <li><a href="savings.html">Savings</a></li>
-          </ul>
+              <li><a href="transactions.html">Transactions</a></li>          
+            </ul>
       </nav>
       <a href="signin.html" id="signin-cta" class="btn-signin">Sign in / Sign up</a>
       <div class="profile-menu" id="profile-menu">
@@ -40,4 +42,157 @@
     </div>
   </header>
 
+
+  <!-- Hero balance -->
+  <section class="hero" aria-label="Budget summary">
+    <div class="hero-inner">
+      <p class="label">Overall Budget</p>
+      <p><span class="figure tabular">$2,184<sup>.30</sup><span class="note">below budget!</span></span></p>
+      <p class="sub"><strong>+$412</strong>  more than last month</p>
+    </div>
+  </section>
+
+
+  <!-- Stat chips -->
+  <section class="stat-row" aria-label="Month at a glance">
+    <div class="stat">
+      <p class="label">Income</p>
+      <p class="figure tabular">$5,900</p>
+      <span class="delta">right on schedule</span>
+    </div>
+    <div class="stat">
+      <p class="label">Spent so far</p>
+      <p class="figure tabular">$3,102</p>
+      <span class="delta">up 8% from last month</span>
+    </div>
+    <div class="stat">
+      <p class="label">Saved</p>
+      <p class="figure tabular">$614</p>
+      <span class="delta">10% of income 🎯</span>
+    </div>
+  </section>
+
+
+  <!-- Spending by category -->
+  <section class="section" aria-label="Spending by category">
+    <div class="section-head">
+      <div class="section-head-title">
+        <a href="budget.html"><h2>Budget</h2></a>
+        <span class="meta">18 days into the month</span>
+      </div>
+      <a href="savings.html">See all</a>
+    </div>
+
+    <div id="category-rows"></div>
+  </section>
+
+
+  <!-- Transactions + goals -->
+  <div class="grid-2">
+
+
+    <section class="section" aria-label="Recent transactions">
+      <div class="section-head">
+        <h2>Recent activity</h2>
+        <a href="transactions.html">See all</a>
+      </div>
+      <ul class="txn-list" id="recent-txn-list"></ul>
+    </section>
+
+
+    <section class="section" aria-label="Savings goals">
+      <div class="section-head">
+        <h2>Goals</h2>
+        <span class="meta" id="goal-count">3 active</span>
+      </div>
+
+      <div class="goal-card-stack" id="goal-card-list"></div>
+    </section>
+
+
+  </div>
+
+
+  <footer class="footer">
+    <span>Statement generated Sep 19, 2026</span>
+    <span>All figures in USD</span>
+  </footer>
+
+  <script src="transactions-data.js"></script>
+  <script>
+    // Reads the same array (and localStorage key) transactions.html
+    // reads/writes — so anything added there shows up here too, and the
+    // "recent" preview never drifts out of sync with the full list.
+    function loadRecentTransactions() {
+      try {
+        const stored = localStorage.getItem("rocTransactions");
+        return stored ? JSON.parse(stored) : [...defaultTransactions];
+      } catch {
+        return [...defaultTransactions];
+      }
+    }
+
+    const recentTxns = [...loadRecentTransactions()]
+      .sort((a, b) => (a.date < b.date ? 1 : -1))
+      .slice(0, 5);
+
+    document.getElementById("recent-txn-list").innerHTML = recentTxns.map(txnRowHtml).join("");
+  </script>
+
+  <script src="categories-data.js"></script>
+  <script>
+    // categories array + categoryRowHtml() come from categories-data.js,
+    // shared with budget.html — add or edit a category there and both
+    // pages update automatically.
+    const categoryRows = document.getElementById("category-rows");
+    // Over-budget categories float to the top — see categoriesSortedByOverBudget()
+    // in categories-data.js.
+    categoriesSortedByOverBudget().forEach((c) => {
+      categoryRows.insertAdjacentHTML("beforeend", categoryRowHtml(c));
+    });
+  </script>
+
+  <script src="goals-data.js"></script>
+  <script>
+    // Goals come from loadGoals() in goals-data.js — the seeded defaults on
+    // a first-ever visit, or whatever's saved (shared with savings.html and
+    // add-goal.html) after that.
+    const list = document.getElementById("goal-card-list");
+    const goals = loadGoals();
+    const r = 40;
+    const circumference = 2 * Math.PI * r;
+
+    document.getElementById("goal-count").textContent = `${goals.length} active`;
+
+    goals.forEach((goal) => {
+      const pct = Math.round((goal.saved / goal.target) * 100);
+      const offset = (circumference * (1 - pct / 100)).toFixed(1);
+      const noteHtml = goal.note ? `<p class="goal-card-desc">${goal.note}</p>` : "";
+
+      list.insertAdjacentHTML("beforeend", `
+        <article class="goal-card" style="background: var(--${goal.color}-tint);">
+          <div class="goal-card-header">
+            <span class="cat-dot" style="background: #fff"><span class="cat-icon">${goal.icon}</span></span>
+            <h3 class="goal-card-title">${goal.name}</h3>
+          </div>
+          <div class="goal-card-body">
+            <div class="goal-card-ring-col">
+              <div class="goal-ring-wrap">
+                <svg viewBox="0 0 100 100" role="img" aria-label="${pct} percent funded">
+                  <circle class="track" cx="50" cy="50" r="${r}" fill="none" stroke-width="10"/>
+                  <circle class="progress" cx="50" cy="50" r="${r}" fill="none" stroke-width="10"
+                          stroke="var(--${goal.color})" stroke-dasharray="${circumference.toFixed(1)}" stroke-dashoffset="${offset}"/>
+                </svg>
+                <span class="goal-ring-pct">${pct}%</span>
+              </div>
+              <p class="goal-card-amount tabular">$${goal.saved.toLocaleString()}<span>of $${goal.target.toLocaleString()}</span></p>
+            </div>
+          </div>
+        </article>
+      `);
+    });
+  </script>
+
+</div>
+</body>
 </html>
