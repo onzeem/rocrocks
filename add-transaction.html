@@ -90,41 +90,60 @@
     </div>
   </div>
 
-  <script src="transactions-data.js"></script>
+    <script src="api.js"></script>
   <script>
-    const STORAGE_KEY = "rocTransactions";
+    const CURRENT_USER_ID = localStorage.getItem("currentUserId") || 1; // TODO: replace once real auth is wired in
 
-    function loadTransactions() {
+    const categorySelect = document.getElementById("txn-category");
+    let categoryMap = {}; // maps category name -> real database id
+
+    async function loadCategories() {
       try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        return stored ? JSON.parse(stored) : [...defaultTransactions];
-      } catch {
-        return [...defaultTransactions];
+        const categories = await apiGet("/categories");
+        categorySelect.innerHTML = '<option value="" disabled selected>Choose a category…</option>';
+        categories.forEach(cat => {
+          categoryMap[cat.name] = cat.id;
+          const opt = document.createElement("option");
+          opt.value = cat.name;
+          opt.textContent = cat.name;
+          categorySelect.appendChild(opt);
+        });
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+        alert("Couldn't load categories — is the backend running?");
       }
     }
 
-    document.getElementById("add-txn-form").addEventListener("submit", (e) => {
+    loadCategories();
+
+    document.getElementById("add-txn-form").addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const merchant = document.getElementById("txn-merchant").value.trim();
-      const category = document.getElementById("txn-category").value;
-      const type = document.getElementById("txn-type").value; // "in" or "out"
+      const categoryName = document.getElementById("txn-category").value;
       const amount = parseFloat(document.getElementById("txn-amount").value);
       const dateValue = document.getElementById("txn-date").value;
 
-      if (!merchant || !amount || amount <= 0) return;
+      if (!merchant || !amount || amount <= 0 || !categoryName) return;
 
-      const transactions = loadTransactions();
-      transactions.push({
-        merchant,
-        category,
-        type,
-        amount,
-        date: dateValue || new Date().toISOString().slice(0, 10),
-      });
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+      const categoryId = categoryMap[categoryName];
+      if (!categoryId) {
+        alert("Please choose a valid category.");
+        return;
+      }
 
-      window.location.href = "transactions.html";
+      try {
+        await apiPost("/transactions", {
+          userId: Number(CURRENT_USER_ID),
+          categoryId: categoryId,
+          amount: amount,
+          description: merchant,
+          date: dateValue || new Date().toISOString().slice(0, 10),
+        });
+        window.location.href = "transactions.html";
+      } catch (err) {
+        alert("Failed to add transaction: " + err.message);
+      }
     });
   </script>
 
