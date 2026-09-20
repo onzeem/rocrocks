@@ -1,4 +1,25 @@
-INSERT INTO users (id, name, email) VALUES (1, 'Test User', 'test@example.com');
+-- data.sql — full seed data for local development.
+--
+-- Runs once, automatically, the first time Spring Boot starts against a
+-- database file that doesn't exist yet (H2 file mode: jdbc:h2:file:./data/budgetdb).
+-- If you need to re-seed after changing this file, delete data/budgetdb.mv.db
+-- (and its .trace.db sibling, if present) first, then restart — Spring Boot
+-- won't re-run this against a database file that already exists.
+--
+-- One demo user (id 33), covering September 2026 — matching what the
+-- frontend currently requests (DEMO_USER_ID in home.html / budget.html /
+-- transactions.html, and the hardcoded YEAR/MONTH built from real device
+-- time). If your machine's real clock is in a different month by the time
+-- you're testing this, either update the budgets row's month/year below,
+-- or temporarily hardcode YEAR/MONTH in the frontend to 2026/9 to match.
+
+-- Users -------------------------------------------------------------------
+
+INSERT INTO users (id, name, email) VALUES (33, 'Test User', 'test@example.com');
+
+-- Categories ----------------------------------------------------------------
+-- Names/order match categories-data.js on the frontend (icons/colors live
+-- there, not in this table — the frontend looks up icon/color by name).
 
 INSERT INTO categories (id, name, description) VALUES
   (1, 'Housing', 'Rent, utilities'),
@@ -8,3 +29,36 @@ INSERT INTO categories (id, name, description) VALUES
   (5, 'Subscriptions', 'Recurring services'),
   (6, 'Entertainment', 'Movies, streaming'),
   (7, 'Utilities', 'Water, power, internet');
+
+-- Budget for September 2026 --------------------------------------------------
+
+INSERT INTO budgets (id, user_id, budget_month, budget_year, total_income)
+VALUES (1, 33, 9, 2026, 5900.00);
+
+INSERT INTO budget_categories (id, budget_id, category_id, allocated_amount) VALUES
+  (1, 1, 1, 1500.00),  -- Housing
+  (2, 1, 2, 500.00),   -- Groceries
+  (3, 1, 3, 300.00),   -- Transport
+  (4, 1, 4, 200.00),   -- Dining out
+  (5, 1, 5, 80.00),    -- Subscriptions
+  (6, 1, 6, 90.00),    -- Entertainment
+  (7, 1, 7, 150.00);   -- Utilities
+
+-- Transactions for September 2026 -------------------------------------------
+-- No "income" rows here — the backend tracks income as a single fixed
+-- amount on the budget itself (total_income above), not via transactions.
+-- home.html always maps every returned transaction as an expense ("out").
+
+INSERT INTO transactions (id, user_id, category_id, amount, date, description) VALUES
+  (1,  33, 2, 54.20,   '2026-09-19', 'Green Leaf Market'),
+  (2,  33, 1, 1365.00, '2026-09-17', 'Riverside Apartments'),
+  (3,  33, 4, 28.75,   '2026-09-16', 'Tanto Ramen'),
+  (4,  33, 3, 81.00,   '2026-09-15', 'Metro Transit Pass'),
+  (5,  33, 5, 9.99,    '2026-09-14', 'Cloudline Storage'),
+  (6,  33, 4, 41.10,   '2026-09-12', 'Basil & Vine'),
+  (7,  33, 2, 67.85,   '2026-09-10', 'Green Leaf Market'),
+  (8,  33, 7, 96.40,   '2026-09-08', 'City Water & Power'),
+  (9,  33, 5, 11.99,   '2026-09-06', 'SoundWave+'),
+  (10, 33, 3, 81.00,   '2026-09-05', 'Metro Transit Pass'),
+  (11, 33, 2, 48.60,   '2026-09-03', 'Green Leaf Market'),
+  (12, 33, 1, 1365.00, '2026-09-01', 'Riverside Apartments');
