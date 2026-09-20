@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ROC Rocks Budgeting — Profile</title>
+<link rel="stylesheet" href="style.css" />
+<script src="auth.js" defer></script>
+</head>
+<body>
+
+<div class="confetti" aria-hidden="true">
+  <span></span><span></span><span></span><span></span><span></span>
+</div>
+
+<div class="shell">
+
+    <header class="masthead">
+    <div class="brand">
+      <span class="brand-coin">$</span>
+      <span class="brand-mark">ROC Rocks Budgeting</span>
+      <span class="brand-tag">Personal budget</span>
+    </div>
+    <div class="masthead-right">
+      <nav class="navbar" aria-label="Primary">
+          <ul>
+              <li><a href="home.html">Home</a></li>
+              <li><a href="budget.html">Budget</a></li>
+              <li><a href="receipt.html">Receipt Upload</a></li>
+              <li><a href="savings.html">Savings</a></li>
+              <li><a href="transactions.html">Transactions</a></li>
+          </ul>
+      </nav>
+      <a href="signin.html" id="signin-cta" class="btn-signin">Sign in / Sign up</a>
+      <div class="profile-menu" id="profile-menu">
+        <a href="signin.html" id="profile-btn" class="profile-btn" aria-label="Open profile page">👤</a>
+        <div class="profile-dropdown">
+          <a href="profile.html" class="active">Profile</a>
+          <a href="settings.html">Settings</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="profile-hero" aria-label="Profile summary">
+    <div class="profile-avatar" aria-hidden="true">👤</div>
+    <div class="profile-info">
+      <p class="profile-name">Jamie Morgan</p>
+      <p class="profile-email">jamie.morgan@example.com</p>
+    </div>
+    <button type="button" class="profile-edit-btn">Edit profile</button>
+  </section>
+
+  <section class="stat-row" aria-label="Account highlights">
+    <div class="stat">
+      <p class="label">Member since</p>
+      <p class="figure">Mar 2026</p>
+    </div>
+    <div class="stat">
+      <p class="label">Goals reached</p>
+      <p class="figure">1</p>
+      <span class="delta">New laptop 💻</span>
+    </div>
+    <div class="stat">
+      <p class="label">Saved this year</p>
+      <p class="figure tabular">$4,180</p>
+    </div>
+  </section>
+
+  <section class="section" aria-label="Account details">
+    <div class="section-head">
+      <h2>Account details</h2>
+    </div>
+    <div class="category-row">
+      <div class="cat-dot" style="background: var(--grape-tint)">👤</div>
+      <div class="category-name">Full name<span class="cap">Shown on your account</span></div>
+      <div class="bar-track" style="visibility: hidden;"></div>
+      <div class="category-amount">Jamie Morgan</div>
+    </div>
+    <div class="category-row">
+      <div class="cat-dot" style="background: var(--mint-tint)">✉️</div>
+      <div class="category-name">Email<span class="cap">Used to sign in</span></div>
+      <div class="bar-track" style="visibility: hidden;"></div>
+      <div class="category-amount">jamie.morgan@example.com</div>
+    </div>
+    <div class="category-row">
+      <div class="cat-dot" style="background: var(--yellow-tint)">🔒</div>
+      <div class="category-name">Password<span class="cap">Last changed 3 months ago</span></div>
+      <div class="bar-track" style="visibility: hidden;"></div>
+      <div class="category-amount"><a href="settings.html">Change</a></div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <span>Statement generated Sep 19, 2026</span>
+    <span>All figures in USD</span>
+  </footer>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ROC Rocks Budgeting — Add a Transaction</title>
+<link rel="stylesheet" href="style.css" />
+<script src="auth.js" defer></script>
+</head>
+<body>
+
+<div class="confetti" aria-hidden="true">
+  <span></span><span></span><span></span><span></span><span></span>
+</div>
+
+<div class="shell">
+
+    <header class="masthead">
+    <div class="brand">
+      <a href="home.html" class="brand-coin" aria-label="Go to home">$</a>
+      <span class="brand-mark">ROC Rocks Budgeting</span>
+      <span class="brand-tag">Personal budget</span>
+    </div>
+    <div class="masthead-right">
+      <nav class="navbar" aria-label="Primary">
+          <ul>
+              <li class="nav-app-link"><a href="home.html">Home</a></li>
+             <li class="nav-app-link"><a href="budget.html">Budget</a></li>
+             <li class="nav-app-link"><a href="receipt.html">Receipt Upload</a></li>
+             <li class="nav-app-link"><a href="savings.html">Savings</a></li>
+             <li class="nav-app-link"><a href="transactions.html" class="active">Transactions</a></li>
+             <li class="nav-about-link"><a href="about.html">About</a></li>
+          </ul>
+      </nav>
+      <a href="signin.html" id="signin-cta" class="btn-signin">Sign in / Sign up</a>
+      <div class="profile-menu" id="profile-menu">
+        <a href="signin.html" id="profile-btn" class="profile-btn" aria-label="Open profile page">👤</a>
+        <div class="profile-dropdown">
+          <a href="profile.html">Profile</a>
+          <a href="settings.html">Settings</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="form-page-wrap">
+    <div class="auth-card" style="max-width: 460px;">
+      <p class="auth-eyebrow">New entry</p>
+      <h1 class="auth-title">Add a transaction</h1>
+      <p class="auth-subtitle">This gets added straight to your full transaction list.</p>
+
+      <form class="auth-form" id="add-txn-form">
+        <div class="field">
+          <label for="txn-merchant">Merchant</label>
+          <input type="text" id="txn-merchant" placeholder="e.g. Corner Bakery" required />
+        </div>
+        <div class="field">
+          <label for="txn-category">Category</label>
+          <select id="txn-category">
+            <option value="" disabled selected>Choose a category…</option>
+            <option value="Groceries">🥑 Groceries</option>
+            <option value="Income">💰 Income</option>
+            <option value="Housing">🏠 Housing</option>
+            <option value="Dining out">🍜 Dining out</option>
+            <option value="Transport">🚌 Transport</option>
+            <option value="Subscriptions">📺 Subscriptions</option>
+            <option value="Utilities">💧 Utilities</option>
+            <option value="Other">💳 Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="txn-type">Type</label>
+          <select id="txn-type">
+            <option value="out">Money out</option>
+            <option value="in">Money in</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="txn-amount">Amount</label>
+          <input type="number" id="txn-amount" placeholder="0.00" step="0.01" min="0" required />
+        </div>
+        <div class="field">
+          <label for="txn-date">Date</label>
+          <input type="date" id="txn-date" />
+        </div>
+        <button type="submit" class="btn-primary">Add transaction</button>
+      </form>
+
+      <p class="auth-switch"><a href="transactions.html">Cancel and go back</a></p>
+    </div>
+  </div>
+
+  <script src="transactions-data.js"></script>
+  <script>
+    const STORAGE_KEY = "rocTransactions";
+
+    function loadTransactions() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : [...defaultTransactions];
+      } catch {
+        return [...defaultTransactions];
+      }
+    }
+
+    document.getElementById("add-txn-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const merchant = document.getElementById("txn-merchant").value.trim();
+      const category = document.getElementById("txn-category").value;
+      const type = document.getElementById("txn-type").value; // "in" or "out"
+      const amount = parseFloat(document.getElementById("txn-amount").value);
+      const dateValue = document.getElementById("txn-date").value;
+
+      if (!merchant || !amount || amount <= 0) return;
+
+      const transactions = loadTransactions();
+      transactions.push({
+        merchant,
+        category,
+        type,
+        amount,
+        date: dateValue || new Date().toISOString().slice(0, 10),
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+
+      window.location.href = "transactions.html";
+    });
+  </script>
+
+</div>
+
+</body>
+</html>

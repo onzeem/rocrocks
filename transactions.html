@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ROC Rocks Budgeting — Transactions</title>
+<link rel="stylesheet" href="style.css" />
+<script src="auth.js" defer></script>
+</head>
+<body>
+
+<div class="confetti" aria-hidden="true">
+  <span></span><span></span><span></span><span></span><span></span>
+</div>
+
+<div class="shell">
+
+     <header class="masthead">
+    <div class="brand">
+      <a href="home.html" class="brand-coin" aria-label="Go to home">$</a>
+      <span class="brand-mark">ROC Rocks Budgeting</span>
+    </div>
+    <div class="masthead-right">
+      <nav class="navbar" aria-label="Primary">
+          <ul>
+              <li class="nav-app-link"><a href="home.html">Home</a></li>
+              <li class="nav-app-link"><a href="budget.html">Budget</a></li>
+              <li class="nav-app-link"><a href="receipt.html">Receipt Upload</a></li>
+              <li class="nav-app-link"><a href="savings.html">Savings</a></li>
+              <li class="nav-app-link"><a href="transactions.html" class="active">Transactions</a></li>          
+              <li class="nav-about-link"><a href="about.html">About</a></li>          
+            </ul>
+      </nav>
+      <a href="signin.html" id="signin-cta" class="btn-signin">Sign in / Sign up</a>
+      <div class="profile-menu" id="profile-menu">
+        <a href="signin.html" id="profile-btn" class="profile-btn" aria-label="Open profile page">👤</a>
+        <div class="profile-dropdown">
+          <a href="profile.html">Profile</a>
+          <a href="settings.html">Settings</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="stat-row" aria-label="This month at a glance">
+    <div class="stat">
+      <p class="label">Money in</p>
+      <p class="figure tabular" id="stat-money-in">$5,900.00</p>
+    </div>
+    <div class="stat">
+      <p class="label">Money out</p>
+      <p class="figure tabular" id="stat-money-out">$3,102.94</p>
+    </div>
+    <div class="stat">
+      <p class="label">Net</p>
+      <p class="figure tabular" id="stat-net">+$2,797.06</p>
+    </div>
+  </section>
+
+  <section class="section" aria-label="All transactions">
+    <div class="section-head">
+      <div class="section-head-title">
+        <h2>All transactions</h2>
+        <span class="meta">September 2026</span>
+      </div>
+      <a href="add-transaction.html" class="btn-primary">+ Add transaction</a>
+    </div>
+
+    <ul class="txn-list" id="txn-list">
+    </ul>
+  </section>
+
+  <footer class="footer">
+    <span>Statement generated Sep 19, 2026</span>
+    <span>All figures in USD</span>
+  </footer>
+
+  <script src="transactions-data.js"></script>
+  <script>
+    const txnList = document.getElementById("txn-list");
+    const moneyInEl = document.getElementById("stat-money-in");
+    const moneyOutEl = document.getElementById("stat-money-out");
+    const netEl = document.getElementById("stat-net");
+
+    // First visit (nothing in localStorage yet): start from the seeded
+    // defaults in transactions-data.js. Every visit after that: whatever's
+    // in localStorage — kept up to date by add-transaction.html — is the
+    // real, current array.
+    const STORAGE_KEY = "rocTransactions";
+
+    function loadTransactions() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : [...defaultTransactions];
+      } catch {
+        return [...defaultTransactions];
+      }
+    }
+
+    const transactions = loadTransactions();
+    const sorted = [...transactions].sort((a, b) => (a.date < b.date ? 1 : -1));
+
+    txnList.innerHTML = sorted.map(txnRowHtml).join("");
+
+    const { moneyIn, moneyOut } = computeTotals(transactions);
+    moneyInEl.textContent = formatMoney(moneyIn);
+    moneyOutEl.textContent = formatMoney(moneyOut);
+    const net = moneyIn - moneyOut;
+    netEl.textContent = `${net >= 0 ? "+" : "−"}${formatMoney(Math.abs(net))}`;
+  </script>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ROC Rocks Budgeting — Sign in</title>
+<link rel="stylesheet" href="style.css" />
+<script src="auth.js" defer></script>
+</head>
+<body>
+
+<div class="confetti" aria-hidden="true">
+  <span></span><span></span><span></span><span></span><span></span>
+</div>
+
+<div class="auth-shell">
+
+  <header class="auth-header">
+    <a href="home.html" class="brand">
+      <span class="brand-coin">$</span>
+      <span class="brand-mark">ROC Rocks Budgeting</span>
+    </a>
+  </header>
+
+  <main class="auth-main">
+    <div class="auth-card">
+      <p class="auth-eyebrow">Welcome back</p>
+      <h1 class="auth-title">Sign in</h1>
+      <p class="auth-subtitle">Good to see you again — let's check on that budget.</p>
+
+      <form class="auth-form" id="signin-form" action="home.html">
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email" />
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password" />
+        </div>
+
+        <div class="field-row">
+          <label class="remember">
+            <input type="checkbox" name="remember" />
+            Remember me
+          </label>
+          <a href="#" class="forgot-link">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn-primary">Sign in</button>
+      </form>
+
+      <div class="auth-divider">or</div>
+
+      <button type="button" class="btn-social">Continue with Google</button>
+
+      <p class="auth-switch">New here? <a href="signup.html">Create an account</a></p>
+    </div>
+  </main>
+
+</div>
+
+<script>
+  document.getElementById("signin-form").addEventListener("submit", () => {
+    setSignedIn(true);
+    // form's action="home.html" handles the navigation
+  });
+</script>
+
+</body>
+</html>
