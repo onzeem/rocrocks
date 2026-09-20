@@ -101,42 +101,39 @@
     </div>
   </div>
 
-  <script src="goals-data.js"></script>
+  <script src="api.js"></script>
   <script>
-    document.getElementById("add-goal-form").addEventListener("submit", (e) => {
+    const DEMO_USER_ID = 33;
+
+    document.getElementById("add-goal-form").addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const name = document.getElementById("goal-name").value.trim();
       const icon = document.getElementById("goal-icon").value;
       const color = document.getElementById("goal-color").value;
-      const saved = parseFloat(document.getElementById("goal-saved").value);
-      const target = parseFloat(document.getElementById("goal-target").value);
-      const dueValue = document.getElementById("goal-due").value;
+      const savedAmount = parseFloat(document.getElementById("goal-saved").value);
+      const targetAmount = parseFloat(document.getElementById("goal-target").value);
+      const dueValue = document.getElementById("goal-due").value; // "YYYY-MM-DD" or ""
       const note = document.getElementById("goal-note").value.trim();
 
-      if (!name || isNaN(saved) || saved < 0 || !target || target <= 0) return;
+      if (!name || isNaN(savedAmount) || savedAmount < 0 || !targetAmount || targetAmount <= 0) return;
 
-      const goal = {
-        name,
-        icon,
-        af: saved >= target ? "A" : "F", // fully funded vs. funding in progress
-        saved,
-        target,
-        color,
-      };
-
-      if (dueValue) {
-        goal.dueDate = `Due ${new Date(dueValue + "T00:00:00").toLocaleDateString("en-US", { month: "short", year: "numeric" })}`;
+      try {
+        await apiPost("/savings-goals", {
+          userId: DEMO_USER_ID,
+          name,
+          icon,
+          color,
+          savedAmount,
+          targetAmount,
+          dueDate: dueValue || null,
+          note: note || null,
+        });
+        window.location.href = "savings.html";
+      } catch (err) {
+        console.error("Failed to add savings goal:", err);
+        alert(err.message || "Couldn't add that goal — check the console for details.");
       }
-      if (note) {
-        goal.note = note;
-      }
-
-      const goals = loadGoals();
-      goals.push(goal);
-      saveGoals(goals);
-
-      window.location.href = "savings.html";
     });
   </script>
 

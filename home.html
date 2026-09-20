@@ -122,7 +122,6 @@
   <script src="api.js"></script>
 <script src="categories-data.js"></script>
 <script src="transactions-data.js"></script>
-<script src="goals-data.js"></script>
 
 <script>
   const DEMO_USER_ID = 33;
@@ -198,41 +197,46 @@
     }
   }
 
-  function loadGoalsSection() {
+  async function loadGoalsSection() {
     const list = document.getElementById("goal-card-list");
-    const goals = loadGoals();
     const r = 40;
     const circumference = 2 * Math.PI * r;
 
-    document.getElementById("goal-count").textContent = `${goals.length} active`;
+    try {
+      const goals = await apiGet(`/savings-goals/user/${DEMO_USER_ID}`);
+      document.getElementById("goal-count").textContent = `${goals.length} active`;
 
-    goals.forEach((goal) => {
-      const pct = Math.round((goal.saved / goal.target) * 100);
-      const offset = (circumference * (1 - pct / 100)).toFixed(1);
+      list.innerHTML = goals.map((goal) => {
+        const pct = goal.percentFunded; // can exceed 100 once over-funding is allowed
+        const ringPct = Math.min(100, pct); // ring visually caps at a full circle regardless
+        const offset = (circumference * (1 - ringPct / 100)).toFixed(1);
+        const afTag = goal.fullyFunded ? "A" : "F";
 
-      list.insertAdjacentHTML("beforeend", `
-        <article class="goal-card" style="background: var(--${goal.color}-tint);">
-          <div class="goal-card-header">
-            <span class="cat-dot" style="background: #fff"><span class="cat-icon">${goal.icon}</span></span>
-            <h3 class="goal-card-title">${goal.name}</h3>
-            <span class="cat-dot" style="background: #fff"><span class="cat-icon">${goal.af}</span></span>
-          </div>
-          <div class="goal-card-body">
-            <div class="goal-card-ring-col">
-              <div class="goal-ring-wrap">
-                <svg viewBox="0 0 100 100" role="img" aria-label="${pct} percent funded">
-                  <circle class="track" cx="50" cy="50" r="${r}" fill="none" stroke-width="10"/>
-                  <circle class="progress" cx="50" cy="50" r="${r}" fill="none" stroke-width="10"
-                          stroke="var(--${goal.color})" stroke-dasharray="${circumference.toFixed(1)}" stroke-dashoffset="${offset}"/>
-                </svg>
-                <span class="goal-ring-pct">${pct}%</span>
-              </div>
-              <p class="goal-card-amount tabular">$${goal.saved.toLocaleString()}<span>of $${goal.target.toLocaleString()}</span></p>
+        return `
+          <article class="goal-card" style="background: var(--${goal.color}-tint);">
+            <div class="goal-card-header">
+              <span class="cat-dot" style="background: #fff"><span class="cat-icon">${goal.icon}</span></span>
+              <h3 class="goal-card-title">${goal.name}</h3>
             </div>
-          </div>
-        </article>
-      `);
-    });
+            <div class="goal-card-body">
+              <div class="goal-card-ring-col">
+                <div class="goal-ring-wrap">
+                  <svg viewBox="0 0 100 100" role="img" aria-label="${pct} percent funded">
+                    <circle class="track" cx="50" cy="50" r="${r}" fill="none" stroke-width="10"/>
+                    <circle class="progress" cx="50" cy="50" r="${r}" fill="none" stroke-width="10"
+                            stroke="var(--${goal.color})" stroke-dasharray="${circumference.toFixed(1)}" stroke-dashoffset="${offset}"/>
+                  </svg>
+                  <span class="goal-ring-pct">${pct}%</span>
+                </div>
+                <p class="goal-card-amount tabular">$${goal.savedAmount.toLocaleString()}<span>of $${goal.targetAmount.toLocaleString()}</span></p>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+    } catch (err) {
+      console.error("Failed to load savings goals:", err);
+    }
   }
 
   loadCategoryRows();

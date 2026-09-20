@@ -54,56 +54,91 @@
     <div class="goal-card-grid" id="goal-card-grid"></div>
   </section>
 
-  <script src="goals-data.js"></script>
+  <script src="api.js"></script>
   <script>
-    // Goals come from loadGoals() in goals-data.js — the seeded defaults on
-    // a first-ever visit, or whatever's saved (shared with home.html and
-    // add-goal.html) after that.
+    const DEMO_USER_ID = 33;
+
     const grid = document.getElementById("goal-card-grid");
-    const goals = loadGoals();
     const r = 40;
     const circumference = 2 * Math.PI * r;
- 
-    document.getElementById("goal-count").textContent = `${goals.length} active`;
- 
-    goals.forEach((goal) => {
-      const pct = Math.round((goal.saved / goal.target) * 100);
-      const offset = (circumference * (1 - pct / 100)).toFixed(1);
- 
-      const dueDateHtml = goal.dueDate
-        ? `<span class="goal-card-due">📅 ${goal.dueDate}</span>`
-        : "";
-      const badgeHtml = goal.badge
-        ? `<span class="goal-card-badge">${goal.badge}</span>`
-        : "";
- 
-      grid.insertAdjacentHTML("beforeend", `
-        <article class="goal-card" style="background: var(--${goal.color}-tint);">
-          <div class="goal-card-header">
-            <span class="cat-dot" style="background: #fff"><span class="cat-icon">${goal.icon}</span></span>
-            <h3 class="goal-card-title">${goal.name}</h3>
-            <span class="cat-dot" style="background: #fff"><span class="cat-icon">${goal.af}</span></span>
-          </div>
-          <div class="goal-card-body">
-            <div class="goal-card-ring-col">
-              <div class="goal-ring-wrap">
-                <svg viewBox="0 0 100 100" role="img" aria-label="${pct} percent funded">
-                  <circle class="track" cx="50" cy="50" r="${r}" fill="none" stroke-width="10"/>
-                  <circle class="progress" cx="50" cy="50" r="${r}" fill="none" stroke-width="10"
-                          stroke="var(--${goal.color})" stroke-dasharray="${circumference.toFixed(1)}" stroke-dashoffset="${offset}"/>
-                </svg>
-                <span class="goal-ring-pct">${pct}%</span>
+
+    async function loadGoals() {
+      try {
+        const goals = await apiGet(`/savings-goals/user/${DEMO_USER_ID}`);
+        document.getElementById("goal-count").textContent = `${goals.length} active`;
+
+        grid.innerHTML = goals.map((goal) => {
+          const pct = goal.percentFunded;
+          const offset = (circumference * (1 - pct / 100)).toFixed(1);
+
+          const dueDateHtml = goal.dueDate
+            ? `<span class="goal-card-due">📅 ${new Date(goal.dueDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", year: "numeric" })}</span>`
+            : "";
+          const noteHtml = goal.note
+            ? `<p class="goal-card-desc">${goal.note}</p>`
+            : "";
+          const afTag = goal.fullyFunded ? "A" : "F";
+
+          return `
+            <article class="goal-card" style="background: var(--${goal.color}-tint);">
+              <div class="goal-card-header">
+                <span class="cat-dot" style="background: #fff"><span class="cat-icon">${goal.icon}</span></span>
+                <h3 class="goal-card-title">${goal.name}</h3>
+                <span class="cat-dot" style="background: #fff"><span class="cat-icon">${afTag}</span></span>
               </div>
-            </div>
-            <div class="goal-card-info-col">
-              <p class="goal-card-amount tabular">$${goal.saved.toLocaleString()}<span>of $${goal.target.toLocaleString()}</span></p>
-              ${dueDateHtml}
-            </div>
-          </div>
-          ${badgeHtml}
-        </article>
-      `);
-    });
+              <div class="goal-card-body">
+                <div class="goal-card-ring-col">
+                  <div class="goal-ring-wrap">
+                    <svg viewBox="0 0 100 100" role="img" aria-label="${pct} percent funded">
+                      <circle class="track" cx="50" cy="50" r="${r}" fill="none" stroke-width="10"/>
+                      <circle class="progress" cx="50" cy="50" r="${r}" fill="none" stroke-width="10"
+                              stroke="var(--${goal.color})" stroke-dasharray="${circumference.toFixed(1)}" stroke-dashoffset="${offset}"/>
+                    </svg>
+                    <span class="goal-ring-pct">${pct}%</span>
+                  </div>
+                </div>
+                <div class="goal-card-info-col">
+                  <p class="goal-card-amount tabular">$${goal.savedAmount.toLocaleString()}<span>of $${goal.targetAmount.toLocaleString()}</span></p>
+                  ${noteHtml}
+                  ${dueDateHtml}
+                  ${!goal.fullyFunded ? `
+                    <div class="txn-form" style="margin-top: 10px;">
+                      <div class="field" style="flex: 1 1 90px;">
+                        <input type="number" id="allocate-amount-${goal.id}" placeholder="0.00" step="0.01" min="0.01" />
+                      </div>
+                      <button type="button" class="btn-primary" style="margin-top: 0;" data-allocate="${goal.id}">Add funds</button>
+                    </div>
+                  ` : ""}
+                </div>
+              </div>
+            </article>
+          `;
+        }).join("");
+
+        grid.querySelectorAll("[data-allocate]").forEach((btn) => {
+          btn.addEventListener("click", () => allocateFunds(btn.dataset.allocate));
+        });
+      } catch (err) {
+        console.error("Failed to load savings goals:", err);
+        grid.innerHTML = `<p>No savings goals found.</p>`;
+      }
+    }
+
+    async function allocateFunds(goalId) {
+      const input = document.getElementById(`allocate-amount-${goalId}`);
+      const amount = parseFloat(input.value);
+      if (!amount || amount <= 0) return;
+
+      try {
+        await apiPost(`/savings-goals/${goalId}/allocate`, { amount });
+        loadGoals(); // re-render with the updated saved amount / ring / A-F tag
+      } catch (err) {
+        console.error("Failed to allocate funds:", err);
+        alert(err.message || "Couldn't add funds — check the console for details.");
+      }
+    }
+
+    loadGoals();
   </script>
 
   <footer class="footer">

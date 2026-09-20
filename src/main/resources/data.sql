@@ -64,6 +64,13 @@ INSERT INTO transactions (id, user_id, category_id, amount, date, description, t
   (12, 33, 1, 1365.00, '2026-09-01', 'Riverside Apartments', 'EXPENSE'),
   (13, 33, null, 2950.00, '2026-09-18', 'Payroll deposit', 'INCOME');
 
+-- Savings goals -------------------------------------------------------------
+
+INSERT INTO savings_goals (id, user_id, name, icon, color, target_amount, saved_amount, due_date, note) VALUES
+  (1, 33, 'Emergency fund', '🛟', 'grape', 6000.00, 4200.00, null,          'On pace to finish by January 🎉'),
+  (2, 33, 'Iceland trip',   '✈️', 'coral', 2500.00, 980.00,  '2027-06-01', 'Add $130/mo to make the June date'),
+  (3, 33, 'New laptop',     '💻', 'mint',  1100.00, 1100.00, null,          'Fully funded — go treat yourself');
+
 -- IMPORTANT: the tables above use auto-generated IDs (GenerationType.IDENTITY).
 -- Manually inserting explicit ID values, like above, doesn't tell H2's
 -- internal identity counter to skip past them — without the RESTART WITH
@@ -73,3 +80,4 @@ ALTER TABLE users ALTER COLUMN id RESTART WITH 34;
 ALTER TABLE budgets ALTER COLUMN id RESTART WITH 2;
 ALTER TABLE budget_categories ALTER COLUMN id RESTART WITH 8;
 ALTER TABLE transactions ALTER COLUMN id RESTART WITH 14;
+ALTER TABLE savings_goals ALTER COLUMN id RESTART WITH 4;
